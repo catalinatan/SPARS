@@ -1,4 +1,7 @@
-pandas
+numpy
 paramiko 
 torch
 nibabel
+os
+tempfile
+nilearn

@@ -78,9 +78,6 @@ class NIfTIDataset(Dataset):
                 # Convert the resized image to numpy array before returning
                 image_data = resized_image.get_fdata()
 
-                if self.transform:
-                    image_data = self.transform(image_data)
-
                 # Clean up the temporary file
                 os.remove(temp_file_path)
 
@@ -92,26 +89,34 @@ class NIfTIDataset(Dataset):
         self.ssh_client.close()
 
 
-def split_dataset(sftp, target_directory):
-    # Define split sizes (e.g., 50% for training, 20% for validation, 30% for holdout)
-    train_size = int(0.5 * len(dataset))
-    val_size = int(0.2 * len(dataset))
-    holdout_size = len(dataset) - train_size - val_size
+# Define the split_dataset function
+def split_dataset(dataset, train_ratio=0.5, val_ratio=0.2, batch_size=5):
+    """
+    Splits a dataset into training, validation, and test sets, and returns DataLoaders for each.
+    
+    Args:
+        dataset (Dataset): The dataset to split.
+        train_ratio (float): Proportion of data to use for training.
+        val_ratio (float): Proportion of data to use for validation.
+        batch_size (int): Batch size for the DataLoaders.
 
-    # Split the dataset into 3 parts
-    train_data, val_data, test_data = random_split(dataset, [train_size, val_size, holdout_size])
+    Returns:
+        train_loader, val_loader, test_loader: DataLoaders for training, validation, and testing.
+    """
+    # Compute sizes for each split
+    train_size = int(train_ratio * len(dataset))
+    val_size = int(val_ratio * len(dataset))
+    test_size = len(dataset) - train_size - val_size
+
+    # Split the dataset
+    train_data, val_data, test_data = random_split(dataset, [train_size, val_size, test_size])
 
     # Create DataLoaders
-    batch_size = 4  # Adjust as needed
     train_loader = DataLoader(train_data, batch_size=batch_size, shuffle=True)
     val_loader = DataLoader(val_data, batch_size=batch_size, shuffle=False)
     test_loader = DataLoader(test_data, batch_size=batch_size, shuffle=False)
-    
-    folder_names = ['training_images', 'validation_images', 'holdout_images']
-    for folder in folder_names:
-        folder_path = os.path.join(target_directory, 'resized_images', folder)
-        sftp.mkdir(folder_path)
-    torch.utils.data.random_split()
+
+    return train_loader, val_loader, test_loader
 
 
 if __name__ == "__main__":
@@ -123,3 +128,6 @@ if __name__ == "__main__":
         target_directory='Task03_Liver/imagesTr'
     )
 
+    # Split the dataset and get DataLoaders
+    train_loader, val_loader, test_loader = split_dataset(dataset)
+    

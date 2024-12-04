@@ -252,7 +252,7 @@ def test_network(net, val_loader):
 
 
 if __name__ == "__main__":
-    dataset = NIfTIDataset(dir_path=Path(__file__).parent / "Task03_Liver")
+    dataset = NIfTIDataset(dir_path= "/raid/candi/catalina/Task03_Liver")
 
     # Split the dataset into training, validation and holdout sets
     train_loader, val_loader, holdout_loader = split_dataset(dataset)

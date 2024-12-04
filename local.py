@@ -286,7 +286,7 @@ def train_network(net, train_loader, val_loader, criterion, optimizer):
 
 def test_network(net, val_loader):
     """
-    Evaluates the network on the validation data and calculates 
+    Evaluates the network on the validation data and calculates
     performance metrics.
 
     Args:

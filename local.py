@@ -71,7 +71,12 @@ class NIfTIDataset(Dataset):
         # Convert resized images to numpy arrays and then to PyTorch tensors
         image_data = resized_image.get_fdata()
         label_data = resized_label.get_fdata()
-
+        print(f"image shape: {image_data.shape}")
+        print(f"label shape: {label_data.shape}")
+        image_data = np.expand_dims(image_data, axis=0)
+        label_data = np.expand_dims(label_data, axis=0)
+        print(f"image shape: {image_data.shape}")
+        print(f"label shape: {label_data.shape}")
         # Return as tensors
         return torch.tensor(image_data, dtype=torch.float32), torch.tensor(
             label_data, dtype=torch.float32
@@ -80,7 +85,7 @@ class NIfTIDataset(Dataset):
 
 # Define the split_dataset function
 def split_dataset(
-    dataset, train_ratio=0.5, val_ratio=0.2, batch__size=32
+    dataset, train_ratio=0.5, val_ratio=0.2
 ):  # batch size of multiple of 8  (increase it until u are out of memory usually 64 or 96)
     # trade off between batch size and image size
     """
@@ -110,10 +115,10 @@ def split_dataset(
     print(f"Holdout set size: {len(holdout_data)}")
     # Create DataLoaders
     train_loader = DataLoader(
-        train_data, batch_size=batch__size, shuffle=True
+        train_data, batch_size=32, shuffle=True
     )
-    val_loader = DataLoader(val_data, batch_size=batch__size, shuffle=False)
-    holdout_loader = DataLoader(holdout_data, batch_size=batch__size, shuffle=False)
+    val_loader = DataLoader(val_data, batch_size=32, shuffle=False)
+    holdout_loader = DataLoader(holdout_data, batch_size=32, shuffle=False)
 
     print(f"Training batches: {len(train_loader)}")
     print(f"Validation batches: {len(val_loader)}")
@@ -126,11 +131,11 @@ def split_dataset(
 class Net(nn.Module):
     def __init__(self):
         super(Net, self).__init__()
-        self.conv1 = nn.Conv3d(in_channels=5, out_channels=8, kernel_size=3, stride=1, bias=True)
+        self.conv1 = nn.Conv3d(in_channels=1, out_channels=8, kernel_size=3, stride=1, bias=True)
         self.pool = nn.MaxPool3d(kernel_size=2, stride=2)
         self.conv2 = nn.Conv3d(in_channels=8, out_channels=16, kernel_size=3, stride=2, bias=True)
-        self.conv3 = nn.Conv3d(in_channels=16, out_channels=5, kernel_size=3, stride=2, bias=True)
-        self.fc1 = nn.Linear(245, 64) # 245 is the number of features after flattening
+        self.conv3 = nn.Conv3d(in_channels=16, out_channels=32, kernel_size=3, stride=2, bias=True)
+        self.fc1 = nn.Linear(32 * 7 * 7 * 5, 64) # 245 is the number of features after flattening
         self.fc2 = nn.Linear(64, 32)
         self.fc3 = nn.Linear(32, 2)  # for binary classification (1 for cancer, 0 for no cancer)
         # if accuracy is not enough, add convolution layers and fully connected layers
@@ -162,43 +167,42 @@ class Net(nn.Module):
 def train_network(net, train_loader, val_loader, criterion, optimizer):
     # Train the network
     for epoch in range(2):  # loop over the dataset multiple times
+        net.train()
         running_loss = 0.0
-        dataset_counter = 0
-        for i, (inputs, labels) in enumerate(train_loader, 1):  # Start index from 1
-            # Increment the dataset counter by the batch size
-            print(:)
-            dataset_counter += len(inputs)
-            print(f"inputs: {inputs.shape}")
-            print(f"labels: {labels.shape}")
-
-            # Zero the parameter gradients
-            optimizer.zero_grad()
-            
-            # Forward pass
-            outputs = net(inputs)
-            print(f"Output shape: {outputs.shape}")
-
-            # Convert labels to 1D tensor of class indices
-            #labels = torch.argmax(labels)
-            #print({labels})
-            max_value = torch.max(labels.flatten())
-            print(f"Max value: {max_value}")
-        #     loss = criterion(outputs, labels)
-            
-        #     # Backward pass and optimize
-        #     loss.backward()
-        #     optimizer.step()
-            
-        #     # Accumulate running loss
-        #     running_loss += loss.item()
-            
-        #     print(f"Batch {i} - Loss: {loss.item():.4f}")
-        #     # Validate after processing 'validate_every' datasets
-        #     if dataset_counter % 2 == 0:
-        #         test_network(net, val_loader)
         
-        # # Print average loss for the epoch
-        # print(f"Epoch {epoch + 1} - Average Training Loss: {running_loss / i:.4f}")
+        for i, (inputs, labels) in enumerate(train_loader):
+            print(f"Batch {i}:")
+            print(f"Inputs shape: {inputs.shape}")  # e.g., torch.Size([5, C, H, W]) or torch.Size([5, 256, 256, 180])
+            print(f"Labels shape: {labels.shape}")  # e.g., torch.Size([5, ...])
+            
+            optimizer.zero_grad()
+
+            # Forward pass
+            outputs = net(inputs)  
+            print(f"Output shape: {outputs.shape}")
+            
+            labels_list = []
+            for sample_no in range(labels.shape[0]):
+                single_label = labels[sample_no].long()
+                if torch.max(single_label.flatten()) == 2:
+                    labels_list.append(1)
+                elif torch.max(single_label.flatten()) == 1:
+                    labels_list.append(0)
+            labels = torch.tensor(labels_list)
+            print(labels)
+
+            loss = criterion(outputs, labels)
+            loss.backward()
+            optimizer.step()
+
+            running_loss += loss.item()
+            print(f"Epoch {epoch + 1}, Batch {i + 1} - Loss: {loss.item():.4f}")
+
+        print(f"Testing after batch {i + 1}...")
+        test_network(net, val_loader)
+        
+        torch.save(net.state_dict(), "model_weights.pth")
+        print(f"Epoch {epoch + 1} - Average Training Loss: {running_loss / len(train_loader):.4f}")
 
 
 def test_network(net, val_loader):
@@ -211,6 +215,16 @@ def test_network(net, val_loader):
         for images, labels in val_loader:
             outputs = net(images)
             _, predicted = torch.max(outputs, 1)
+            print(f"Output shape: {outputs.shape}")
+
+            labels_list = []
+            for sample_no in range(images.shape[0]):
+                single_label = labels[sample_no].long()
+                if torch.max(single_label.flatten()) == 2:
+                    labels_list.append(1)
+                elif torch.max(single_label.flatten()) == 1:
+                    labels_list.append(0)
+            labels = torch.tensor(labels_list)
 
             # Vectorized comparison
             matches = (predicted == labels)
@@ -225,29 +239,21 @@ def test_network(net, val_loader):
             false_positives += ((predicted == 1) & (labels == 0)).sum().item()
             false_negatives += ((predicted == 0) & (labels == 1)).sum().item()
 
-    # Calculate metrics
-    accuracy = 100 * correct / total
-    precision = true_positives / (true_positives + false_positives) if true_positives + false_positives > 0 else 0
-    recall = true_positives / (true_positives + false_negatives) if true_positives + false_negatives > 0 else 0
+        # Calculate metrics
+        accuracy = 100 * correct / total
+        precision = true_positives / (true_positives + false_positives) if true_positives + false_positives > 0 else 0
+        recall = true_positives / (true_positives + false_negatives) if true_positives + false_negatives > 0 else 0
 
-    # Print results
-    print(f'Accuracy of the network: {accuracy:.2f} %')
-    print('Confusion Matrix')
-    print(f"Precision: {precision:.4f}")
-    print(f"Recall: {recall:.4f}")
-
-    net.train()  # Set model back to training mode
+        # Print results
+        print(f'Accuracy of the network: {accuracy:.2f} %')
+        print('Confusion Matrix')
+        print(f"Precision: {precision:.4f}")
+        print(f"Recall: {recall:.4f}")
 
 
 if __name__ == "__main__":
     dataset = NIfTIDataset(dir_path=Path(__file__).parent / "Task03_Liver")
 
-    # Create a DataLoader to iterate through the dataset
-    dataloader = DataLoader(dataset, batch_size=32, shuffle=True)
-
-    for images, labels in dataloader:
-        print(f"Batch shape (images): {images.shape}")
-        print(f"Batch shape (labels): {labels.shape}")
     # Split the dataset into training, validation and holdout sets
     train_loader, val_loader, holdout_loader = split_dataset(dataset)
 
@@ -261,8 +267,6 @@ if __name__ == "__main__":
     
     # Train the network
     train_network(net, train_loader, val_loader, criterion, optimizer)
-
-    # .net() save the weights of the model how to save weights on pytorch after a few iterations of the for loop
 
     # around 60-70% accuracy with good confusion matrix (as long as its not all in one class) then train to server 
 

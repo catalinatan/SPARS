@@ -49,8 +49,9 @@ class NIfTIDataset(Dataset):
                     self.training_files.append(file_path)
                 elif str(file_path).startswith(os.path.join(self.dir_path , "labelsTr")):
                     self.label_files.append(file_path)
-        self.training_files = [element for element in self.training_files if not str(element).startswith == "._"]
-        self.label_files = [element for element in self.label_files if not str(element).startswith == "._"]
+        self.training_files = [element for element in self.training_files if not str(element).startswith("._")]
+        self.label_files = [element for element in self.label_files if not str(element).startswith("._")]
+
         self.files = list(zip(self.training_files, self.label_files))
         print(f"Found {len(self.training_files)} training files and {len(self.label_files)} label files.")
         print(f"Combined into {len(self.files)} pairs.")

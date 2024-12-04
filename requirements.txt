@@ -1,5 +1,4 @@
 numpy
-paramiko 
 torch
 nibabel
 scipy

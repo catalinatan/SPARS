@@ -45,9 +45,9 @@ class NIfTIDataset(Dataset):
         for dirpath, dirnames, filenames in os.walk(self.dir_path):
             for filename in filenames:
                 file_path = Path(dirpath) / filename
-                if str(file_path).startswith(str(self.dir_path / "imagesTr")):
+                if str(file_path).startswith(os.path.join(self.dir_path, "imagesTr")):
                     self.training_files.append(file_path)
-                elif str(file_path).startswith(str(self.dir_path / "labelsTr")):
+                elif str(file_path).startswith(os.path.join(self.dir_path , "labelsTr")):
                     self.label_files.append(file_path)
         self.files = list(zip(self.training_files, self.label_files))
         print(f"Found {len(self.training_files)} training files and {len(self.label_files)} label files.")
@@ -242,14 +242,15 @@ def test_network(net, val_loader):
         # Calculate metrics
         accuracy = 100 * correct / total
         precision = true_positives / (true_positives + false_positives) if true_positives + false_positives > 0 else 0
-        recall = true_positives / (true_positives + false_negatives) if true_positives + false_negatives > 0 else 0
-
+        sensitivity = true_positives / (true_positives + false_negatives) if true_positives + false_negatives > 0 else 0
+        specificity = true_negatives / (true_negatives + false_positives) if true_negatives + false_positives > 0 else 0
+        
         # Print results
         print(f'Accuracy of the network: {accuracy:.2f} %')
         print('Confusion Matrix')
         print(f"Precision: {precision:.4f}")
-        print(f"Recall: {recall:.4f}")
-
+        print(f"Sensitivity: {sensitivity:.4f}")
+        print(f"Specificity: {specificity:.4f}")
 
 if __name__ == "__main__":
     dataset = NIfTIDataset(dir_path= "/raid/candi/catalina/Task03_Liver")

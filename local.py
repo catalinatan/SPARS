@@ -186,14 +186,17 @@ class Net(nn.Module):
             in_channels=8, out_channels=16, kernel_size=3, stride=2, bias=True
         )
         self.conv3 = nn.Conv3d(
-            in_channels=16, out_channels=64, kernel_size=3, stride=2, bias=True
+            in_channels=16, out_channels=32, kernel_size=3, stride=2, bias=True
+        )
+        self.conv4 = nn.Conv3d(
+            in_channels=32, out_channels=64, kernel_size=3, stride=2, bias=True
         )
         self.pool = nn.MaxPool3d(kernel_size=2, stride=2)
-        self.fc1 = nn.Linear(64 * 7 * 7 * 5, 512)
-        self.fc2 = nn.Linear(512, 256)
-        self.fc3 = nn.Linear(256, 128)
-        self.fc4 = nn.Linear(128, 64)
-        self.fc5 = nn.Linear(64, 2)
+        self.fc1 = nn.Linear(64 * 3 * 3 * 2, 1600)
+        self.fc2 = nn.Linear(1600, 800)
+        self.fc3 = nn.Linear(800, 400)
+        self.fc4 = nn.Linear(400, 128)
+        self.fc5 = nn.Linear(128, 2)
         # if accuracy is not enough, add convolution layers
         # and fully connected layers
         # out_channels = max 96 but can increase to 64
@@ -211,8 +214,9 @@ class Net(nn.Module):
         x = self.pool(F.relu(self.conv1(x)))
         x = self.pool(F.relu(self.conv2(x)))
         x = self.pool(F.relu(self.conv3(x)))
+        x = F.relu(self.conv4(x))
         x = x.view(x.size(0), -1)  # Flatten for fully connected layers
-        x = F.relu((self.fc1(x)))
+        x = F.relu(self.fc1(x))
         x = F.relu(self.fc2(x))
         x = F.relu(self.fc3(x))
         x = F.relu(self.fc4(x))
@@ -259,8 +263,7 @@ def train_network(net, train_loader, val_loader, criterion, optimizer):
                 max_labels == 2, torch.tensor(1), torch.tensor(0)
             )
 
-            print(labels)
-
+            print(f"Training labels: {labels}")
             # Compute the loss
             loss = criterion(outputs, labels)
             # Backward pass and optimization
@@ -316,8 +319,8 @@ def test_network(net, val_loader):
                 max_labels == 2, torch.tensor(1), torch.tensor(0)
             )
 
-            print(labels)
-
+            print(f"Predicted labels: {predicted}")
+            print(f"Validation labels: {labels}")
             # Vectorized comparison
             matches = predicted == labels
 
@@ -352,6 +355,10 @@ def test_network(net, val_loader):
         # Print results
         print(f"Accuracy of the network: {accuracy:.2f} %")
         print("Confusion Matrix")
+        print(f"True Positives: {true_positives}")
+        print(f"True Negatives: {true_negatives}")
+        print(f"False Positives: {false_positives}")
+        print(f"False Negatives: {false_negatives}")
         print(f"Precision: {precision:.4f}")
         print(f"Sensitivity: {sensitivity:.4f}" if sensitivity !=0 else "No true negatives")
         print(f"Specificity: {specificity:.4f}" if specificity !=0 else "No true positives")

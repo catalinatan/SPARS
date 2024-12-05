@@ -250,14 +250,16 @@ def train_network(net, train_loader, val_loader, criterion, optimizer):
             # Forward pass
             outputs = net(inputs)
 
-            labels_list = []
-            for sample_no in range(labels.shape[0]):
-                single_label = labels[sample_no].long()
-                if torch.max(single_label.flatten()) == 2:
-                    labels_list.append(1)
-                elif torch.max(single_label.flatten()) == 1:
-                    labels_list.append(0)
-            labels = torch.tensor(labels_list)
+            #along the last dimension
+            max_labels = torch.max(labels.flatten(start_dim=1), dim=1)[0]
+
+            # Create a new tensor with 1 where max_labels is 2,
+            # and 0 where max_labels is 1
+            labels = torch.where(
+                max_labels == 2, torch.tensor(1), torch.tensor(0)
+            )
+
+            print(labels)
 
             # Compute the loss
             loss = criterion(outputs, labels)
@@ -305,14 +307,16 @@ def test_network(net, val_loader):
             _, predicted = torch.max(outputs, 1)
             print(f"Output shape: {outputs.shape}")
 
-            labels_list = []
-            for sample_no in range(labels.shape[0]):
-                single_label = labels[sample_no].long()
-                if torch.max(single_label.flatten()) == 2:
-                    labels_list.append(1)
-                elif torch.max(single_label.flatten()) == 1:
-                    labels_list.append(0)
-            labels = torch.tensor(labels_list)
+            #along the last dimension
+            max_labels = torch.max(labels.flatten(start_dim=1), dim=1)[0]
+
+            # Create a new tensor with 1 where max_labels is 2,
+            # and 0 where max_labels is 1
+            labels = torch.where(
+                max_labels == 2, torch.tensor(1), torch.tensor(0)
+            )
+
+            print(labels)
 
             # Vectorized comparison
             matches = predicted == labels
@@ -349,8 +353,8 @@ def test_network(net, val_loader):
         print(f"Accuracy of the network: {accuracy:.2f} %")
         print("Confusion Matrix")
         print(f"Precision: {precision:.4f}")
-        print(f"Sensitivity: {sensitivity:.4f}")
-        print(f"Specificity: {specificity:.4f}")
+        print(f"Sensitivity: {sensitivity:.4f}" if sensitivity !=0 else "No true negatives")
+        print(f"Specificity: {specificity:.4f}" if specificity !=0 else "No true positives")
 
 
 if __name__ == "__main__":

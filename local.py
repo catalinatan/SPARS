@@ -175,23 +175,29 @@ class Net(nn.Module):
     A 3D Convolutional Neural Network for binary classification.
 
     This network consists of three convolutional layers followed by
-    max pooling layers, and three fully connected layers.
+    max pooling layers, and 5 fully connected layers.
     """
     def __init__(self):
         super(Net, self).__init__()
         self.conv1 = nn.Conv3d(
             in_channels=1, out_channels=8, kernel_size=3, stride=1, bias=True
         )
+        self.bn1 = nn.BatchNorm3d(8)  # Batch Norm after conv1
         self.conv2 = nn.Conv3d(
             in_channels=8, out_channels=16, kernel_size=3, stride=2, bias=True
         )
+        self.bn2 = nn.BatchNorm3d(16)  # Batch Norm after conv2
         self.conv3 = nn.Conv3d(
-            in_channels=16, out_channels=32, kernel_size=3, stride=2, bias=True
+            in_channels=16, out_channels=64, kernel_size=3, stride=2, bias=True
         )
+        self.bn3 = nn.BatchNorm3d(64)  # Batch Norm after conv3
         self.pool = nn.MaxPool3d(kernel_size=2, stride=2)
-        self.fc1 = nn.Linear(32 * 7 * 7 * 5, 64)
-        self.fc2 = nn.Linear(64, 32)
-        self.fc3 = nn.Linear(32, 2)
+        self.fc1 = nn.Linear(64 * 7 * 7 * 5, 512)
+        self.bn_fc1 = nn.BatchNorm1d(512)  # Batch Norm after fc1
+        self.fc2 = nn.Linear(512, 256)
+        self.fc3 = nn.Linear(256, 128)
+        self.fc4 = nn.Linear(128, 64)
+        self.fc5 = nn.Linear(64, 2)
         # if accuracy is not enough, add convolution layers
         # and fully connected layers
         # out_channels = max 96 but can increase to 64
@@ -206,19 +212,15 @@ class Net(nn.Module):
         Returns:
             torch.Tensor: Output tensor of shape (N, 2).
         """
-        # Apply conv1, relu activation, and pooling
-        x = self.pool(F.relu(self.conv1(x)))
-        # Apply conv2, relu activation, and pooling
-        x = self.pool(F.relu(self.conv2(x)))
-        # Apply conv3, relu activation, and pooling
-        x = self.pool(F.relu(self.conv3(x)))
-        # Flatten for fully connected layers
-        x = x.view(x.size(0), -1)
-        # Apply fully connected layers with relu activation
-        x = F.relu(self.fc1(x))
+        x = self.pool(F.relu(self.bn1(self.conv1(x))))  # Apply BN after conv1
+        x = self.pool(F.relu(self.bn2(self.conv2(x))))  # Apply BN after conv2
+        x = self.pool(F.relu(self.bn3(self.conv3(x))))  # Apply BN after conv3
+        x = x.view(x.size(0), -1)  # Flatten for fully connected layers
+        x = F.relu(self.bn_fc1(self.fc1(x)))  # Apply BN after fc1
         x = F.relu(self.fc2(x))
-        # Final layer (no activation for raw logits)
-        x = self.fc3(x)
+        x = F.relu(self.fc3(x))
+        x = F.relu(self.fc4(x))
+        x = self.fc5(x)
         return x
 
 
@@ -252,15 +254,14 @@ def train_network(net, train_loader, val_loader, criterion, optimizer):
             # Forward pass
             outputs = net(inputs)
 
-            # Flatten the labels tensor and find the maximum value
-            # along the last dimension
-            max_labels = torch.max(labels.flatten(start_dim=1), dim=1)[0]
-
-            # Create a new tensor with 1 where max_labels is 2,
-            # and 0 where max_labels is 1
-            labels = torch.where(
-                max_labels == 2, torch.tensor(1), torch.tensor(0)
-            )
+            labels_list = []
+            for sample_no in range(labels.shape[0]):
+                single_label = labels[sample_no].long()
+                if torch.max(single_label.flatten()) == 2:
+                    labels_list.append(1)
+                elif torch.max(single_label.flatten()) == 1:
+                    labels_list.append(0)
+            labels = torch.tensor(labels_list)
 
             # Compute the loss
             loss = criterion(outputs, labels)
@@ -308,15 +309,14 @@ def test_network(net, val_loader):
             _, predicted = torch.max(outputs, 1)
             print(f"Output shape: {outputs.shape}")
 
-            # Flatten the labels tensor and find the maximum value
-            # along the last dimension
-            max_labels = torch.max(labels.flatten(start_dim=1), dim=1)[0]
-
-            # Create a new tensor with 1 where max_labels is 2,
-            # and 0 where max_labels is 1
-            labels = torch.where(
-                max_labels == 2, torch.tensor(1), torch.tensor(0)
-            )
+            labels_list = []
+            for sample_no in range(labels.shape[0]):
+                single_label = labels[sample_no].long()
+                if torch.max(single_label.flatten()) == 2:
+                    labels_list.append(1)
+                elif torch.max(single_label.flatten()) == 1:
+                    labels_list.append(0)
+            labels = torch.tensor(labels_list)
 
             # Vectorized comparison
             matches = predicted == labels

@@ -254,7 +254,7 @@ def train_network(net, train_loader, val_loader, criterion, optimizer):
             # Forward pass
             outputs = net(inputs)
 
-            #along the last dimension
+            # Along the last dimension
             max_labels = torch.max(labels.flatten(start_dim=1), dim=1)[0]
 
             # Create a new tensor with 1 where max_labels is 2,
@@ -310,7 +310,7 @@ def test_network(net, val_loader):
             _, predicted = torch.max(outputs, 1)
             print(f"Output shape: {outputs.shape}")
 
-            #along the last dimension
+            # Along the last dimension
             max_labels = torch.max(labels.flatten(start_dim=1), dim=1)[0]
 
             # Create a new tensor with 1 where max_labels is 2,
@@ -360,8 +360,52 @@ def test_network(net, val_loader):
         print(f"False Positives: {false_positives}")
         print(f"False Negatives: {false_negatives}")
         print(f"Precision: {precision:.4f}")
-        print(f"Sensitivity: {sensitivity:.4f}" if sensitivity !=0 else "No true negatives")
-        print(f"Specificity: {specificity:.4f}" if specificity !=0 else "No true positives")
+        # Print sensitivity
+        if sensitivity != 0:
+            print(f"Sensitivity: {sensitivity:.4f}")
+        else:
+            print("No true positives")
+        # Print specificity
+        if specificity != 0:
+            print(f"Specificity: {specificity:.4f}")
+        else:
+            print("No true negatives")
+
+# https://saturncloud.io/blog/how-to-use-class-weights-with-focal-loss-in-pytorch-for-imbalanced-multiclass-classification/#use-class-weights
+
+
+class FocalLoss(nn.Module):
+    def __init__(self, alpha=None, gamma=2):
+        super(FocalLoss, self).__init__()
+        self.alpha = alpha
+        self.gamma = gamma
+
+    def forward(self, inputs, targets):
+        ce_loss = F.cross_entropy(inputs, targets, reduction='none')
+        pt = torch.exp(-ce_loss)
+        if self.alpha is not None:
+            at = self.alpha.gather(0, targets.data.view(-1))
+            ce_loss = ce_loss * at
+        loss = ((1 - pt) ** self.gamma * ce_loss).mean()
+        return loss
+
+
+def calculate_weights(train_loader):
+    pos_labels = 0
+    neg_labels = 0
+    tot_labels = 0
+
+    for _, labels in train_loader:
+        max_labels = torch.max(labels.flatten(start_dim=1), dim=1)[0]
+        pos_labels += (max_labels == 2).sum().item()
+        neg_labels += (max_labels == 1).sum().item()
+        tot_labels += len(max_labels)
+
+    pos_weight = ((1 / (pos_labels / tot_labels)) if pos_labels > 0 else 1)
+    neg_weight = ((1 / (neg_labels / tot_labels)) if neg_labels > 0 else 1)
+
+    class_weights = torch.tensor([neg_weight, pos_weight], dtype=torch.float32)
+    return class_weights
 
 
 if __name__ == "__main__":
@@ -377,8 +421,11 @@ if __name__ == "__main__":
     # Initialize the neural network
     net = Net()
 
+    # Define class weights
+    class_weights = calculate_weights(train_loader)
+
     # Define the loss function and optimizer
-    criterion = nn.CrossEntropyLoss()
+    criterion = FocalLoss(alpha=class_weights, gamma=2)
     optimizer = optim.SGD(net.parameters(), lr=0.001, momentum=0.9)
 
     # Train the network

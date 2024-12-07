@@ -375,19 +375,23 @@ def test_network(net, val_loader):
 
 
 class FocalLoss(nn.Module):
-    def __init__(self, alpha=None, gamma=2):
+    def __init__(self, alpha=1, gamma=2, reduction='mean'):
         super(FocalLoss, self).__init__()
         self.alpha = alpha
         self.gamma = gamma
+        self.reduction = reduction
 
     def forward(self, inputs, targets):
         ce_loss = F.cross_entropy(inputs, targets, reduction='none')
         pt = torch.exp(-ce_loss)
-        if self.alpha is not None:
-            at = self.alpha.gather(0, targets.data.view(-1))
-            ce_loss = ce_loss * at
-        loss = ((1 - pt) ** self.gamma * ce_loss).mean()
-        return loss
+        focal_loss = self.alpha * (1 - pt) ** self.gamma * ce_loss
+
+        if self.reduction == 'mean':
+            return focal_loss.mean()
+        elif self.reduction == 'sum':
+            return focal_loss.sum()
+        else:
+            return focal_loss
 
 # https://scikit-learn.org/stable/modules/generated/sklearn.utils.class_weight.compute_class_weight.html
 def calculate_weights(train_loader):
@@ -436,7 +440,7 @@ if __name__ == "__main__":
     class_weights = calculate_weights(train_loader)
 
     # Define the loss function and optimizer
-    criterion = nn.CrossEntropyLoss(weight=class_weights)
+    criterion = FocalLoss(alpha=class_weights, gamma=2)
     optimizer = optim.SGD(net.parameters(), lr=0.001, momentum=0.9)
 
     # Train the network

@@ -431,8 +431,8 @@ if __name__ == "__main__":
     net = Net()
 
     # Define class weights
-    class_weights = calculate_weights(train_loader)
-
+    # class_weights = calculate_weights(train_loader)
+    class_weights = torch.tensor([0.6, 0.4], dtype=torch.float32)
     # Define the loss function and optimizer
     criterion = FocalLoss(alpha=class_weights, gamma=2)
     optimizer = optim.SGD(net.parameters(), lr=0.001, momentum=0.9)

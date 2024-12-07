@@ -384,14 +384,8 @@ class FocalLoss(nn.Module):
     def forward(self, inputs, targets):
         ce_loss = F.cross_entropy(inputs, targets, reduction='none')
         pt = torch.exp(-ce_loss)
-        focal_loss = self.alpha * (1 - pt) ** self.gamma * ce_loss
-
-        if self.reduction == 'mean':
-            return focal_loss.mean()
-        elif self.reduction == 'sum':
-            return focal_loss.sum()
-        else:
-            return focal_loss
+        loss = (self.alpha[targets] * (1 - pt) ** self.gamma * ce_loss).mean()
+        return loss
 
 # https://scikit-learn.org/stable/modules/generated/sklearn.utils.class_weight.compute_class_weight.html
 def calculate_weights(train_loader):

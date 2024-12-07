@@ -401,9 +401,13 @@ def calculate_weights(train_loader):
         neg_labels += (max_labels == 1).sum().item()
         tot_labels += len(max_labels)
 
+    print(f"Positive labels (1): {pos_labels}")
+    print(f"Negative labels (0): {neg_labels}")
+    print(f"Total labels: {tot_labels}")
+
     # Calculate unnormalized weights
-    pos_weight = ((1 / (tot_labels / (pos_labels * 2))) if pos_labels > 0 else 1)
-    neg_weight = ((1 / (tot_labels / (neg_labels * 2))) if neg_labels > 0 else 1)
+    pos_weight = (tot_labels / (pos_labels * 2)) if pos_labels > 0 else 1
+    neg_weight = (tot_labels / (neg_labels * 2)) if neg_labels > 0 else 1
 
     # Normalize weights
     total_weight = pos_weight + neg_weight
@@ -411,7 +415,7 @@ def calculate_weights(train_loader):
     neg_weight_normalized = neg_weight / total_weight
     
     class_weights = torch.tensor([neg_weight_normalized, pos_weight_normalized], dtype=torch.float32)
-    print(class_weights)
+    print(f"Normalized class weights: {class_weights}")
     return class_weights
 
 

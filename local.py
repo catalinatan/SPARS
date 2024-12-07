@@ -389,7 +389,7 @@ class FocalLoss(nn.Module):
         loss = ((1 - pt) ** self.gamma * ce_loss).mean()
         return loss
 
-
+# https://scikit-learn.org/stable/modules/generated/sklearn.utils.class_weight.compute_class_weight.html
 def calculate_weights(train_loader):
     pos_labels = 0
     neg_labels = 0
@@ -401,10 +401,17 @@ def calculate_weights(train_loader):
         neg_labels += (max_labels == 1).sum().item()
         tot_labels += len(max_labels)
 
-    pos_weight = ((1 / (pos_labels / tot_labels)) if pos_labels > 0 else 1)
-    neg_weight = ((1 / (neg_labels / tot_labels)) if neg_labels > 0 else 1)
+    # Calculate unnormalized weights
+    pos_weight = ((1 / (tot_labels / (pos_labels * 2))) if pos_labels > 0 else 1)
+    neg_weight = ((1 / (tot_labels / (neg_labels * 2))) if neg_labels > 0 else 1)
 
-    class_weights = torch.tensor([neg_weight, pos_weight], dtype=torch.float32)
+    # Normalize weights
+    total_weight = pos_weight + neg_weight
+    pos_weight_normalized = pos_weight / total_weight
+    neg_weight_normalized = neg_weight / total_weight
+    
+    class_weights = torch.tensor([neg_weight_normalized, pos_weight_normalized], dtype=torch.float32)
+    print(class_weights)
     return class_weights
 
 
@@ -416,7 +423,7 @@ if __name__ == "__main__":
     train_loader, val_loader, holdout_loader = split_dataset(dataset)
 
     # Define the class labels
-    classes = ("cancer", "no cancer")
+    classes = ("no cancer", "cancer")
 
     # Initialize the neural network
     net = Net()
@@ -425,7 +432,7 @@ if __name__ == "__main__":
     class_weights = calculate_weights(train_loader)
 
     # Define the loss function and optimizer
-    criterion = FocalLoss(alpha=class_weights, gamma=2)
+    criterion = nn.CrossEntropyLoss(weight=class_weights)
     optimizer = optim.SGD(net.parameters(), lr=0.001, momentum=0.9)
 
     # Train the network

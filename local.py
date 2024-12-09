@@ -117,7 +117,7 @@ class NIfTIDataset(Dataset):
 
 
 def split_dataset(
-    dataset, train_ratio=0.5, val_ratio=0.2, batch_size=32
+    dataset, train_ratio=0.5, val_ratio=0.2, batch_size=56
 ):
     # batch size of multiple of 8
     # (increase it until you are out of memory usually 64 or 96)
@@ -182,15 +182,19 @@ class Net(nn.Module):
         self.conv1 = nn.Conv3d(
             in_channels=1, out_channels=8, kernel_size=3, stride=1, bias=True
         )
+        self.bn1 = nn.BatchNorm3d(8)
         self.conv2 = nn.Conv3d(
             in_channels=8, out_channels=16, kernel_size=3, stride=2, bias=True
         )
+        self.bn2 = nn.BatchNorm3d(16)
         self.conv3 = nn.Conv3d(
             in_channels=16, out_channels=32, kernel_size=3, stride=2, bias=True
         )
+        self.bn3 = nn.BatchNorm3d(32)
         self.conv4 = nn.Conv3d(
             in_channels=32, out_channels=64, kernel_size=3, stride=2, bias=True
         )
+        self.bn4 = nn.BatchNorm3d(64)
         self.pool = nn.MaxPool3d(kernel_size=2, stride=2)
         self.fc1 = nn.Linear(64 * 3 * 3 * 2, 1600)
         self.fc2 = nn.Linear(1600, 800)
@@ -211,10 +215,10 @@ class Net(nn.Module):
         Returns:
             torch.Tensor: Output tensor of shape (N, 2).
         """
-        x = self.pool(F.relu(self.conv1(x)))
-        x = self.pool(F.relu(self.conv2(x)))
-        x = self.pool(F.relu(self.conv3(x)))
-        x = F.relu(self.conv4(x))
+        x = self.pool(F.relu(self.bn1(self.conv1(x))))
+        x = self.pool(F.relu(self.bn2(self.conv2(x))))
+        x = self.pool(F.relu(self.bn3(self.conv3(x))))
+        x = F.relu(self.bn4(self.conv4(x)))
         x = x.view(x.size(0), -1)  # Flatten for fully connected layers
         x = F.relu(self.fc1(x))
         x = F.relu(self.fc2(x))

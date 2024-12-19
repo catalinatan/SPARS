@@ -246,8 +246,8 @@ def train_network(net, train_loader, val_loader, criterion, optimizer):
                           f"labels: {labels.shape}")
             # `data` shape: [100, 5, 1, 256, 256, 180]
             # Rearrange and merge the first two dimensions
-        #     inputs = inputs.permute(1, 0, 2, 3, 4, 5)  # Move "file" dimension to the front, shape: [5, 100, 1, 256, 256, 180]
-        #     data = data.reshape(-1, *data.shape[2:])  # Merge first two dimensions, shape: [500, 1, 256, 256, 180]
+            inputs = inputs.permute(1, 0, 2, 3, 4, 5)  # Move "file" dimension to the front, shape: [5, 100, 1, 256, 256, 180]
+            data = data.reshape(-1, *data.shape[2:])  # Merge first two dimensions, shape: [500, 1, 256, 256, 180]
 
         #     optimizer.zero_grad()
 

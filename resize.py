@@ -85,19 +85,31 @@ class NIfTIDataset(Dataset):
         self._list_files_in_dir()
 
     def _list_files_in_dir(self):
+        """
+        Lists and pairs the training and label files in the directory.
+
+        This method populates the training_files and label_files lists
+        and pairs them into the files attribute.
+        """
         self.training_files = []
         self.label_files = []
 
-        for dirpath, dirnames, filenames in os.walk(self.dir_path):
+        for dirpath, _, filenames in os.walk(self.dir_path):
             for filename in filenames:
+                if filename.startswith("._"):
+                    continue
                 file_path = Path(dirpath) / filename
-                if str(file_path).startswith(str(self.dir_path / "imagesTr")):
+                if "imagesTr" in file_path.parts:
                     self.training_files.append(file_path)
-                elif str(file_path).startswith(str(self.dir_path / "labelsTr")):
+                elif "labelsTr" in file_path.parts:
                     self.label_files.append(file_path)
+
         self.files = list(zip(self.training_files, self.label_files))
-        print(f"Found {len(self.training_files)} training files and {len(self.label_files)} label files.")
+
+        print(f"Found {len(self.training_files)} training files and "
+              f"{len(self.label_files)} label files.")
         print(f"Combined into {len(self.files)} pairs.")
+
 
     def __len__(self):
         return len(self.files)

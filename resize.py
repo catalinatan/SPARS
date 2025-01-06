@@ -105,12 +105,15 @@ class NIfTIDataset(Dataset):
                     continue
                 file_path = Path(dirpath) / filename
                 if "imagesTr" in file_path.parts:
+                    print(f"Found image file: {file_path}")
                     self.training_files.append(file_path)
                 elif "labelsTr" in file_path.parts:
+                    print(f"Found label file: {file_path}")
                     self.label_files.append(file_path)
 
         self.files = list(zip(self.training_files, self.label_files))
-
+        print(f"self.files: {self.files}")
+        
         print(f"Found {len(self.training_files)} training files and "
               f"{len(self.label_files)} label files.")
         print(f"Combined into {len(self.files)} pairs.")
@@ -120,6 +123,8 @@ class NIfTIDataset(Dataset):
         return len(self.files)
 
     def __getitem__(self, idx):
+        print(f"Fetching item index: {idx}")  # Debug statement
+
         # Load the NIfTI images and labels
         image_file, label_file = self.files[idx]
 
@@ -136,7 +141,11 @@ class NIfTIDataset(Dataset):
         print(f"Label shape: {label_data.shape}")
         
         if self.transform:
+            print("Applying transform")  # Debug statement
             image_tensor, label_tensor = self.transform(image_data, label_data)
+        else:
+            image_tensor = torch.tensor(image_data, dtype=torch.float32).unsqueeze(0)
+            label_tensor = torch.tensor(label_data, dtype=torch.float32).unsqueeze(0)
 
         pairs = []
         for i in range(len(image_tensor)):

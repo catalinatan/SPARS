@@ -170,5 +170,8 @@ if __name__ == "__main__":
     crop_no = 10
     transform = NRandomCrop(crop_size, crop_no)
 
+    dir_path = Path(__file__).parent / "Task03_Liver"
+    print(f"{dir_path}")
+
     # Create the dataset and dataloaders
     dataset = NIfTIDataset(dir_path=Path(__file__).parent / "Task03_Liver", transform=transform)

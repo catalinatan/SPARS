@@ -14,7 +14,7 @@ import torch.nn.functional as F
 def resize_image(img_data):
     # Define target shape for the resized image
     target_shape = (256, 256, 180)
-    
+
     # Convert input to a PyTorch tensor and add batch and channel dimensions
     img_tensor = torch.tensor(img_data, dtype=torch.float32).unsqueeze(0).unsqueeze(0)  # Shape: (1, 1, D, H, W)
 
@@ -22,6 +22,8 @@ def resize_image(img_data):
     resized_tensor = F.interpolate(img_tensor, size=target_shape, mode='trilinear', align_corners=False)
 
     resized_data = resized_tensor.squeeze() # Tensor Shape: (256, 256, 180)
+
+    print(f"Resized data shape: {resized_data.shape}")
     return resized_data
 
 
@@ -48,6 +50,9 @@ class NRandomCrop:
             label_crop = labels[d_start:d_start + self.crop_size[0],
                                 h_start:h_start + self.crop_size[1],
                                 w_start:w_start + self.crop_size[2]]
+
+            print(f"Crop shape: {crop.shape}")
+            print(f"Label crop shape: {label_crop.shape}")
 
             max_label = torch.max(torch.tensor(label_crop.flatten()), dim=0)[0].item()
             relabeled = 1 if max_label == 2 else 0
@@ -127,6 +132,9 @@ class NIfTIDataset(Dataset):
         image_data = nifti_image.get_fdata()
         label_data = nifti_label.get_fdata()
 
+        print(f"Image shape: {image_data.shape}")
+        print(f"Label shape: {label_data.shape}")
+        
         if self.transform:
             image_tensor, label_tensor = self.transform(image_data, label_data)
 
@@ -135,6 +143,8 @@ class NIfTIDataset(Dataset):
             image = image_tensor[i].squeeze().unsqueeze(0)  # Remove the channel dimension
             label = label_tensor[i].squeeze().unsqueeze(0)  # Remove the channel dimension
             pairs.append((image, label))
+            print(f"Image shape: {image.shape}")
+            print(f"Label shape: {label.shape}")
         return pairs
 
 if __name__ == "__main__":
@@ -145,5 +155,3 @@ if __name__ == "__main__":
 
     # Create the dataset and dataloaders
     dataset = NIfTIDataset(dir_path=Path(__file__).parent / "Task03_Liver", transform=transform)
-
-    

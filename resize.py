@@ -99,8 +99,16 @@ class NIfTIDataset(Dataset):
         self.training_files = []
         self.label_files = []
 
+        print(f"Directory path: {self.dir_path}")  # Debug statement
+
+        if not os.path.exists(self.dir_path):
+            print(f"Directory does not exist: {self.dir_path}")  # Debug statement
+            return
+
         for dirpath, _, filenames in os.walk(self.dir_path):
+            print(f"Checking directory: {dirpath}")  # Debug statement
             for filename in filenames:
+                print(f"Found file: {filename}")  # Debug statement
                 if filename.startswith("._"):
                     continue
                 file_path = Path(dirpath) / filename
@@ -113,7 +121,7 @@ class NIfTIDataset(Dataset):
 
         self.files = list(zip(self.training_files, self.label_files))
         print(f"self.files: {self.files}")
-        
+
         print(f"Found {len(self.training_files)} training files and "
               f"{len(self.label_files)} label files.")
         print(f"Combined into {len(self.files)} pairs.")

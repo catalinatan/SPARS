@@ -124,12 +124,15 @@ class NIfTIDataset(Dataset):
                 elif "labelsTr" in file_path.parts:
                     self.label_files.append(file_path)
 
+        # Sort the files to ensure they are paired correctly
+        self.training_files.sort()
+        self.label_files.sort()
+
         self.files = list(zip(self.training_files, self.label_files))
 
         print(f"Found {len(self.training_files)} training files and "
               f"{len(self.label_files)} label files.")
         print(f"Combined into {len(self.files)} pairs.")
-
 
     def __len__(self):
         return len(self.files)

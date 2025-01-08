@@ -315,10 +315,10 @@ def train_network(net, train_loader, val_loader, criterion, optimizer):
         )
 
         # Evaluate the network on the validation data
-        test_network(net, val_loader)
+        # test_network(net, val_loader)
 
         # Save the model weights
-        torch.save(net.state_dict(), "model_weights.pth")
+        # torch.save(net.state_dict(), "model_weights.pth")
 
 
 def test_network(net, val_loader):

@@ -113,23 +113,24 @@ class NIfTIDataset(Dataset):
             print(f"Directory does not exist: {self.dir_path}")  # Debug statement
             return
 
-        for dirpath, _, filenames in os.walk(self.dir_path):
-            print(f"Checking directory: {dirpath}")  # Debug statement
-            for filename in filenames:
-                if filename.startswith("._"):
-                    continue
-                file_path = Path(dirpath) / filename
-                if "imagesTr" in file_path.parts:
-                    self.training_files.append(file_path)
-                elif "labelsTr" in file_path.parts:
-                    self.label_files.append(file_path)
+        # get all the training file names and then i just add imagesTr
 
-        # Sort the files to ensure they are paired correctly
-        self.training_files.sort()
-        self.label_files.sort()
+        os.listdir(self.dir_path / imagesTr)
+        # imagesTr / liver_0_ 
+        # labelsTr / liver_0_ 
+        # for dirpath, _, filenames in os.walk(self.dir_path):
+        #     print(f"Checking directory: {dirpath}")  # Debug statement
+        #     for filename in filenames:
+        #         if filename.startswith("._"):
+        #             continue
+        #         file_path = Path(dirpath) / filename
+        #         if "imagesTr" in file_path.parts:
+        #             self.training_files.append(file_path)
+        #         elif "labelsTr" in file_path.parts:
+        #             self.label_files.append(file_path)
 
         self.files = list(zip(self.training_files, self.label_files))
-        print(self.files)
+
         print(f"Found {len(self.training_files)} training files and "
               f"{len(self.label_files)} label files.")
         print(f"Combined into {len(self.files)} pairs.")

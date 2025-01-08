@@ -108,19 +108,15 @@ class NIfTIDataset(Dataset):
         for dirpath, _, filenames in os.walk(self.dir_path):
             print(f"Checking directory: {dirpath}")  # Debug statement
             for filename in filenames:
-                print(f"Found file: {filename}")  # Debug statement
                 if filename.startswith("._"):
                     continue
                 file_path = Path(dirpath) / filename
                 if "imagesTr" in file_path.parts:
-                    print(f"Found image file: {file_path}")
                     self.training_files.append(file_path)
                 elif "labelsTr" in file_path.parts:
-                    print(f"Found label file: {file_path}")
                     self.label_files.append(file_path)
 
         self.files = list(zip(self.training_files, self.label_files))
-        print(f"self.files: {self.files}")
 
         print(f"Found {len(self.training_files)} training files and "
               f"{len(self.label_files)} label files.")
@@ -147,22 +143,20 @@ class NIfTIDataset(Dataset):
 
         print(f"Image shape: {image_data.shape}")
         print(f"Label shape: {label_data.shape}")
-        
+
         if self.transform:
             print("Applying transform")  # Debug statement
-            image_tensor, label_tensor = self.transform(image_data, label_data)
-        else:
-            image_tensor = torch.tensor(image_data, dtype=torch.float32).unsqueeze(0)
-            label_tensor = torch.tensor(label_data, dtype=torch.float32).unsqueeze(0)
+            image_tensor, label = self.transform(image_data, label_data)
 
         pairs = []
         for i in range(len(image_tensor)):
             image = image_tensor[i].squeeze().unsqueeze(0)  # Remove the channel dimension
-            label = label_tensor[i].squeeze().unsqueeze(0)  # Remove the channel dimension
+            
             pairs.append((image, label))
             print(f"Image shape: {image.shape}")
             print(f"Label shape: {label.shape}")
         return pairs
+
 
 if __name__ == "__main__":
     # Define the transformation
@@ -172,7 +166,16 @@ if __name__ == "__main__":
 
     # Initialize the dataset
     dataset = NIfTIDataset(dir_path="/raid/candi/catalina/Task03_Liver", transform=transform)
-    
+
+    # Create the DataLoader
+    dataloader = DataLoader(dataset, batch_size=32, shuffle=True)
+
+    # Iterate over the DataLoader
+    for i, (images, labels) in enumerate(dataloader):
+        print(f"Batch {i}:")
+        print(f"Images shape: {images.shape}")
+        print(f"Labels: {labels}")
+
     #dir_path = Path(__file__).parent / "Task03_Liver"
     #print(f"{dir_path}")
 

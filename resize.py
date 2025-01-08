@@ -44,6 +44,14 @@ class NRandomCrop:
             h_start = random.randint(0, h - self.crop_size[1])
             w_start = random.randint(0, w - self.crop_size[2])
 
+            # Adjust starting indices to ensure valid crop size
+            if d_start + self.crop_size[0] > d:
+                d_start = d - self.crop_size[0]
+            if h_start + self.crop_size[1] > h:
+                h_start = h - self.crop_size[1]
+            if w_start + self.crop_size[2] > w:
+                w_start = w - self.crop_size[2]
+
             crop = images[d_start:d_start + self.crop_size[0],
                           h_start:h_start + self.crop_size[1],
                           w_start:w_start + self.crop_size[2]]
@@ -318,7 +326,7 @@ def train_network(net, train_loader, val_loader, criterion, optimizer):
         # test_network(net, val_loader)
 
         # Save the model weights
-        # torch.save(net.state_dict(), "model_weights.pth")
+        torch.save(net.state_dict(), "model_weights.pth")
 
 
 def test_network(net, val_loader):

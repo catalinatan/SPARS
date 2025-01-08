@@ -115,9 +115,11 @@ class NIfTIDataset(Dataset):
 
         # get all the training file names and then i just add imagesTr
 
-        os.listdir(self.dir_path / imagesTr)
+        #os.listdir(self.dir_path / imagesTr)
+        print(self.dir_path)
+
         print(f"Listing directory: {os.listdir(self.dir_path)}")  # Debug statement
-        
+
         # imagesTr / liver_0_ 
         # labelsTr / liver_0_ 
         # for dirpath, _, filenames in os.walk(self.dir_path):

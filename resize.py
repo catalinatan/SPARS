@@ -116,9 +116,13 @@ class NIfTIDataset(Dataset):
         # get all the training file names and then i just add imagesTr
 
         #os.listdir(self.dir_path / imagesTr)
-        print(self.dir_path)
+        patient_names = os.listdir(os.path.join(self.dir_path, "labelsTr"))
+        patient_names = [element for element in patient_names if not element.startswith("._")]
 
-        print(f"Listing directory: {os.listdir(self.dir_path)}")  # Debug statement
+        self.label_files = [os.path.join(self.dir_path, "labelsTr", element) for element in patient_names]
+        
+        self.training_files = [os.path.join(self.dir_path, "imagesTr", element) for element in patient_names]
+        #print(f"Listing directory: {os.listdir(self.dir_path)}")  # Debug statement
 
         # imagesTr / liver_0_ 
         # labelsTr / liver_0_ 

@@ -28,7 +28,7 @@ def resize_image(img_data):
 
 
 class NRandomCrop:
-    def __init__(self, crop_size=(96, 96, 64), crop_no=10):
+    def __init__(self, crop_size=(64, 64, 32), crop_no=10):
         self.crop_size = crop_size
         self.crop_no = crop_no
 
@@ -113,29 +113,12 @@ class NIfTIDataset(Dataset):
             print(f"Directory does not exist: {self.dir_path}")  # Debug statement
             return
 
-        # get all the training file names and then i just add imagesTr
-
-        #os.listdir(self.dir_path / imagesTr)
         patient_names = os.listdir(os.path.join(self.dir_path, "labelsTr"))
         patient_names = [element for element in patient_names if not element.startswith("._")]
+        patient_names = patient_names[0:63]
 
         self.label_files = [os.path.join(self.dir_path, "labelsTr", element) for element in patient_names]
-        
         self.training_files = [os.path.join(self.dir_path, "imagesTr", element) for element in patient_names]
-        #print(f"Listing directory: {os.listdir(self.dir_path)}")  # Debug statement
-
-        # imagesTr / liver_0_ 
-        # labelsTr / liver_0_ 
-        # for dirpath, _, filenames in os.walk(self.dir_path):
-        #     print(f"Checking directory: {dirpath}")  # Debug statement
-        #     for filename in filenames:
-        #         if filename.startswith("._"):
-        #             continue
-        #         file_path = Path(dirpath) / filename
-        #         if "imagesTr" in file_path.parts:
-        #             self.training_files.append(file_path)
-        #         elif "labelsTr" in file_path.parts:
-        #             self.label_files.append(file_path)
 
         self.files = list(zip(self.training_files, self.label_files))
 
@@ -178,7 +161,7 @@ class NIfTIDataset(Dataset):
         return pairs
 
 def split_dataset(
-    dataset, train_ratio=0.5, val_ratio=0.2, batch_size=56
+    dataset, train_ratio=0.5, val_ratio=0.2, batch_size=32
 ):
     # batch size of multiple of 8
     # (increase it until you are out of memory usually 64 or 96)
@@ -335,7 +318,7 @@ def train_network(net, train_loader, val_loader, criterion, optimizer):
         )
 
         # Evaluate the network on the validation data
-        # test_network(net, val_loader)
+        test_network(net, val_loader)
 
         # Save the model weights
         torch.save(net.state_dict(), "model_weights.pth")

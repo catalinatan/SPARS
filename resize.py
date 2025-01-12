@@ -59,9 +59,6 @@ class NRandomCrop:
                                 h_start:h_start + self.crop_size[1],
                                 w_start:w_start + self.crop_size[2]]
 
-            print(f"Crop shape: {crop.shape}")
-            print(f"Label crop shape: {label_crop.shape}")
-
             max_label = torch.max(torch.tensor(label_crop.flatten()), dim=0)[0].item()
             relabeled = 1 if max_label == 2 else 0
 
@@ -138,17 +135,11 @@ class NIfTIDataset(Dataset):
         # Load NIfTI images using nibabel
         nifti_image = nib.load(image_file)
         nifti_label = nib.load(label_file)
-        print(f"Loading image file: {image_file}")
-        print(f"Loading label file: {label_file}")
 
         image_data = nifti_image.get_fdata()
         label_data = nifti_label.get_fdata()
 
-        print(f"Image shape: {image_data.shape}")
-        print(f"Label shape: {label_data.shape}")
-
         if self.transform:
-            print("Applying transform")  # Debug statement
             image_tensor, label = self.transform(image_data, label_data)
 
         pairs = []
@@ -156,8 +147,6 @@ class NIfTIDataset(Dataset):
             image = image_tensor[i].squeeze().unsqueeze(0)  # Remove the channel dimension
 
             pairs.append((image, label))
-            print(f"Image shape: {image.shape}")
-            print(f"Label: {label}")
         return pairs
 
 def split_dataset(

@@ -13,7 +13,7 @@ import torch.nn.functional as F
 
 def resize_image(img_data):
     # Define target shape for the resized image
-    target_shape = (256, 256, 180)
+    target_shape = (128, 128, 90)  # Smaller target shape
 
     # Convert input to a PyTorch tensor and add batch and channel dimensions
     img_tensor = torch.tensor(img_data, dtype=torch.float32).unsqueeze(0).unsqueeze(0)  # Shape: (1, 1, D, H, W)
@@ -28,7 +28,7 @@ def resize_image(img_data):
 
 
 class NRandomCrop:
-    def __init__(self, crop_size=(64, 64, 32), crop_no=10):
+    def __init__(self, crop_size=(64, 64, 32), crop_no=8):  # Reduce number of crops
         self.crop_size = crop_size
         self.crop_no = crop_no
 
@@ -277,7 +277,7 @@ def train_network(net, train_loader, val_loader, criterion, optimizer):
     Returns:
         None
     """
-    for epoch in range(2):  # loop over the dataset multiple times
+    for epoch in range(2):  # Reduce number of epochs
         net.train()
         running_loss = 0.0
 
@@ -408,9 +408,8 @@ if __name__ == "__main__":
     net = Net()
 
     # Define the loss function and optimizer
-    # criterion = FocalLoss(alpha=class_weights, gamma=2)
     criterion = nn.CrossEntropyLoss()
-    optimizer = optim.SGD(net.parameters(), lr=0.001, momentum=0.9)
+    optimizer = optim.Adam(net.parameters(), lr=0.001)  # Use Adam optimizer
 
     # Train the network
     train_network(net, train_loader, val_loader, criterion, optimizer)

@@ -10,7 +10,7 @@ import torch.optim as optim
 import torch.nn.functional as F
 
 
-def resize_image(nifti_image, target_shape=(256, 256, 180)):
+def resize_image(nifti_image, target_shape=(128, 128, 90)):  # Smaller target shape
     """
     Resizes a NIfTI image to the target shape using bilinear interpolation.
 
@@ -244,7 +244,7 @@ def train_network(net, train_loader, val_loader, criterion, optimizer):
     Returns:
         None
     """
-    for epoch in range(2):  # loop over the dataset multiple times
+    for epoch in range(1):  # Reduce number of epochs
         net.train()
         running_loss = 0.0
 
@@ -440,7 +440,7 @@ if __name__ == "__main__":
     # Define the loss function and optimizer
     # criterion = FocalLoss(alpha=class_weights, gamma=2)
     criterion = nn.CrossEntropyLoss()
-    optimizer = optim.SGD(net.parameters(), lr=0.001, momentum=0.9)
+    optimizer = optim.Adam(net.parameters(), lr=0.001)  # Use Adam optimizer
 
     # Train the network
     train_network(net, train_loader, val_loader, criterion, optimizer)

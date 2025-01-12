@@ -9,6 +9,10 @@ from scipy.ndimage import zoom
 import torch.nn as nn
 import torch.optim as optim
 import torch.nn.functional as F
+import logging
+
+# Configure logging
+logging.basicConfig(filename='debug.log', level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 
 def resize_image(img_data):
@@ -23,7 +27,7 @@ def resize_image(img_data):
 
     resized_data = resized_tensor.squeeze() # Tensor Shape: (256, 256, 180)
 
-    print(f"Resized data shape: {resized_data.shape}")
+    logging.info(f"Resized data shape: {resized_data.shape}")
     return resized_data
 
 
@@ -75,8 +79,8 @@ class NRandomCrop:
 
         resized_crops = [resize_image(crop) for crop in crops]
 
-        print(f"Resized crops: {len(resized_crops)}")
-        print(f"Relabeled labels: {len(relabeled_labels)}")
+        logging.info(f"Resized crops: {len(resized_crops)}")
+        logging.info(f"Relabeled labels: {len(relabeled_labels)}")
 
         return resized_crops, relabeled_labels
 
@@ -104,10 +108,10 @@ class NIfTIDataset(Dataset):
         self.training_files = []
         self.label_files = []
 
-        print(f"Directory path: {self.dir_path}")  # Debug statement
+        logging.info(f"Directory path: {self.dir_path}")  # Debug statement
 
         if not os.path.exists(self.dir_path):
-            print(f"Directory does not exist: {self.dir_path}")  # Debug statement
+            logging.error(f"Directory does not exist: {self.dir_path}")  # Debug statement
             return
 
         patient_names = os.listdir(os.path.join(self.dir_path, "labelsTr"))
@@ -119,15 +123,15 @@ class NIfTIDataset(Dataset):
 
         self.files = list(zip(self.training_files, self.label_files))
 
-        print(f"Found {len(self.training_files)} training files and "
+        logging.info(f"Found {len(self.training_files)} training files and "
               f"{len(self.label_files)} label files.")
-        print(f"Combined into {len(self.files)} pairs.")
+        logging.info(f"Combined into {len(self.files)} pairs.")
 
     def __len__(self):
         return len(self.files)
 
     def __getitem__(self, idx):
-        print(f"Fetching item index: {idx}")  # Debug statement
+        logging.info(f"Fetching item index: {idx}")  # Debug statement
 
         # Load the NIfTI images and labels
         image_file, label_file = self.files[idx]
@@ -190,12 +194,12 @@ def split_dataset(
         holdout_data, batch_size=batch_size, shuffle=False
     )
 
-    print(f"Training set size: {train_size}")
-    print(f"Validation set size: {val_size}")
-    print(f"Holdout set size: {holdout_size}")
-    print(f"Training batches: {len(train_loader)}")
-    print(f"Validation batches: {len(val_loader)}")
-    print(f"Holdout batches: {len(holdout_loader)}")
+    logging.info(f"Training set size: {train_size}")
+    logging.info(f"Validation set size: {val_size}")
+    logging.info(f"Holdout set size: {holdout_size}")
+    logging.info(f"Training batches: {len(train_loader)}")
+    logging.info(f"Validation batches: {len(val_loader)}")
+    logging.info(f"Holdout batches: {len(holdout_loader)}")
 
     return train_loader, val_loader, holdout_loader
 
@@ -282,9 +286,7 @@ def train_network(net, train_loader, val_loader, criterion, optimizer):
         running_loss = 0.0
 
         for i, (inputs, labels) in enumerate(train_loader):
-            print(f"Batch {i}:")
-            print(f"Inputs shape: {inputs.shape}")
-            print(f"Training labels: {labels}")
+            logging.info(f"Batch {i}: Inputs shape: {inputs.shape}, Training labels: {labels}")
 
             optimizer.zero_grad()
 
@@ -299,7 +301,7 @@ def train_network(net, train_loader, val_loader, criterion, optimizer):
 
             running_loss += loss.item()
 
-        print(
+        logging.info(
             (
                 f"Epoch {epoch + 1} - Average Training Loss: "
                 f"{running_loss / len(train_loader):.4f}"
@@ -335,9 +337,7 @@ def test_network(net, val_loader):
         for images, labels in val_loader:
             outputs = net(images)
             _, predicted = torch.max(outputs, 1)
-            print(f"Output shape: {outputs.shape}")
-            print(f"Predicted labels: {predicted}")
-            print(f"Validation labels: {labels}")
+            logging.info(f"Output shape: {outputs.shape}, Predicted labels: {predicted}, Validation labels: {labels}")
             
             # Vectorized comparison
             matches = predicted == labels
@@ -371,23 +371,23 @@ def test_network(net, val_loader):
         )
 
         # Print results
-        print(f"Accuracy of the network: {accuracy:.2f} %")
-        print("Confusion Matrix")
-        print(f"True Positives: {true_positives}")
-        print(f"True Negatives: {true_negatives}")
-        print(f"False Positives: {false_positives}")
-        print(f"False Negatives: {false_negatives}")
-        print(f"Precision: {precision:.4f}")
+        logging.info(f"Accuracy of the network: {accuracy:.2f} %")
+        logging.info("Confusion Matrix")
+        logging.info(f"True Positives: {true_positives}")
+        logging.info(f"True Negatives: {true_negatives}")
+        logging.info(f"False Positives: {false_positives}")
+        logging.info(f"False Negatives: {false_negatives}")
+        logging.info(f"Precision: {precision:.4f}")
         # Print sensitivity
         if sensitivity != 0:
-            print(f"Sensitivity: {sensitivity:.4f}")
+            logging.info(f"Sensitivity: {sensitivity:.4f}")
         else:
-            print("No true positives")
+            logging.info("No true positives")
         # Print specificity
         if specificity != 0:
-            print(f"Specificity: {specificity:.4f}")
+            logging.info(f"Specificity: {specificity:.4f}")
         else:
-            print("No true negatives")
+            logging.info("No true negatives")
 
 if __name__ == "__main__":
     # Define the transformation

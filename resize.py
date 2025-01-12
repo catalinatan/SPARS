@@ -13,7 +13,7 @@ import torch.nn.functional as F
 
 def resize_image(img_data):
     # Define target shape for the resized image
-    target_shape = (128, 128, 90)  # Smaller target shape
+    target_shape = (256, 256, 180)
 
     # Convert input to a PyTorch tensor and add batch and channel dimensions
     img_tensor = torch.tensor(img_data, dtype=torch.float32).unsqueeze(0).unsqueeze(0)  # Shape: (1, 1, D, H, W)
@@ -112,7 +112,7 @@ class NIfTIDataset(Dataset):
 
         patient_names = os.listdir(os.path.join(self.dir_path, "labelsTr"))
         patient_names = [element for element in patient_names if not element.startswith("._")]
-        patient_names = patient_names[0:63]
+        patient_names = patient_names[:10]
 
         self.label_files = [os.path.join(self.dir_path, "labelsTr", element) for element in patient_names]
         self.training_files = [os.path.join(self.dir_path, "imagesTr", element) for element in patient_names]

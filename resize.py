@@ -32,7 +32,7 @@ def resize_image(img_data):
 
 
 class NRandomCrop:
-    def __init__(self, crop_size=(64, 64, 32), crop_no=8):  # Reduce number of crops
+    def __init__(self, crop_size=(64, 64, 32), crop_no=10):  # Reduce number of crops
         self.crop_size = crop_size
         self.crop_no = crop_no
 
@@ -146,11 +146,9 @@ class NIfTIDataset(Dataset):
         if self.transform:
             image_tensor, label = self.transform(image_data, label_data)
 
-        pairs = []
-        for i in range(len(image_tensor)):
-            image = image_tensor[i].squeeze().unsqueeze(0)  # Remove the channel dimension
-
-            pairs.append((image, label))
+        # Return the entire list of pairs
+        pairs = [(image_tensor[i].squeeze().unsqueeze(0), label[i]) for i in range(len(image_tensor))]
+        logging.info(f"Pairs: {len(pairs)}")
         return pairs
 
 def split_dataset(
@@ -285,21 +283,22 @@ def train_network(net, train_loader, val_loader, criterion, optimizer):
         net.train()
         running_loss = 0.0
 
-        for i, (inputs, labels) in enumerate(train_loader):
-            logging.info(f"Batch {i}: Inputs shape: {inputs.shape}, Training labels: {labels}")
+        for i, batch in enumerate(train_loader):
+            for inputs, labels in batch:
+                logging.info(f"Batch {i}: Inputs shape: {inputs.shape}, Training labels: {labels}")
 
-            optimizer.zero_grad()
+                optimizer.zero_grad()
 
-            # Forward pass
-            outputs = net(inputs)
+                # Forward pass
+                outputs = net(inputs)
 
-            # Compute the loss
-            loss = criterion(outputs, labels)
-            # Backward pass and optimization
-            loss.backward()
-            optimizer.step()
+                # Compute the loss
+                loss = criterion(outputs, labels)
+                # Backward pass and optimization
+                loss.backward()
+                optimizer.step()
 
-            running_loss += loss.item()
+                running_loss += loss.item()
 
         logging.info(
             (

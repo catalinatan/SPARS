@@ -399,7 +399,8 @@ if __name__ == "__main__":
 
     # Split the dataset into training, validation, and holdout sets
     train_loader, val_loader, holdout_loader = split_dataset(dataset)
-
+    
+    print("Data set loaded")
     # Define the class labels
     classes = ("no cancer", "cancer")
 

@@ -335,7 +335,7 @@ crop_size = (96, 96, 64)
 crop_no = 10
 transform = NRandomCrop(crop_size, crop_no)
 
-dir_path="/Users/catalina.angelia/GamifyAI/Task03_Liver"
+dir_path="/raid/candi/catalina/Task03_Liver"
 
 patient_names = os.listdir(os.path.join(dir_path, "labelsTr"))
 patient_names = [element for element in patient_names if not element.startswith(".")]

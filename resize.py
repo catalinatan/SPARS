@@ -78,7 +78,11 @@ class NRandomCrop:
                 neg_counter += 1
 
         resized_crops = [resize_image(crop) for crop in crops]
+        resized_crops = [np.expand_dims(crop, axis=0) for crop in crops]
+        
+        new_resized_crops = np.concatenate(resized_crops, axis=0)
 
+        print(f"Shape of resized crops: {new_resized_crops.shape}")
         logging.info(f"Resized crops: {len(resized_crops)}")
         logging.info(f"Relabeled labels: {len(relabeled_labels)}")
 
@@ -146,10 +150,16 @@ class NIfTIDataset(Dataset):
         if self.transform:
             image_tensor, label = self.transform(image_data, label_data)
 
+        image_tensor, label 
+        print(f"Shape of image_tensor {image_tensor.shape}")
+        print(f"Shape of label {label.shape}")
+
         # Return the entire list of pairs
-        pairs = [(image_tensor[i].squeeze().unsqueeze(0), label[i]) for i in range(len(image_tensor))]
+        pairs = [(image_tensor[i], label[i]) for i in range(len(image_tensor))]
         logging.info(f"Pairs: {len(pairs)}")
-        return pairs
+        return image_tensor, label
+
+
 
 def split_dataset(
     dataset, train_ratio=0.5, val_ratio=0.2, batch_size=32

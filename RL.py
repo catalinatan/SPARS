@@ -4,11 +4,11 @@ import gymnasium as gym
 
 
 class CursorImageEnv(gym.Env):
-    def __init__(self, full_image_size=(256, 256, 180), window_size = (32, 32, 32)):
+    def __init__(self, full_image_size=(256, 256, 180), window_size = (64, 64, 32)):
 
         self.full_image_size = full_image_size
         self.window_size = window_size
-        self.cursor_position = np.array([16, 16]) # Assume the window is slid across 2D? 
+        self.cursor_position = np.array([full_image_size[0] - (window_size[0]/2), full_image_size[1] - (window_size[1]/2)], full_image_size[2] - (window_size[2]/2)) # Assume the window is slid across 2D? 
 
         # agent and target location still required?
 
@@ -17,14 +17,10 @@ class CursorImageEnv(gym.Env):
             low=0, high=255, shape=window_size, dtype=np.uint8
         )
 
-        # We have 4 actions, corresponding to "right", "up", "left", "down"
-        self.action_space = gym.spaces.Discrete(4)
-        self._action_to_direction = {
-            0: np.array([1, 0]),  # right
-            1: np.array([0, 1]),  # up
-            2: np.array([-1, 0]),  # left
-            3: np.array([0, -1]),  # down
-        }
+        # Action space is discrete, with 6 possible actions: up, down, left, right, forward, backward
+        self.action_space = gym.spaces.Discrete(6)
+
+        # load the classifier model
 
     def _get_obs(self):
         """Crop the image around the cursor."""
@@ -45,11 +41,17 @@ class CursorImageEnv(gym.Env):
         return crop
     
     def reset(self):
-        self.cursor_position = np.array([16, 16])
+        self.cursor_position = np.array([64, 64, 32]) # random range 
         return self._get_obs()
     
     def step(self, action):
-        direction = self._action_to_direction[action]
+        if action == 0: 
+            self.cursor_position = cursor_position + np.array([0, 0, 4])
+
+        # if statements for each direction (up, down, left, right, forward, backward) left right, forward, backward
+        # get new cursor position after each direction
+        # user cursor position to crop the image == observation
+        # pass through crop through the classifier --> reward
         self.cursor_position = np.clip(self.cursor_position + direction, 0, self.full_image_size[:2])
         obs = self._get_obs()
         return obs, 0.0, False, {}

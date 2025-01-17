@@ -77,7 +77,6 @@ class NRandomCrop:
         resized_crops = [crop.unsqueeze(0).unsqueeze(0) for crop in crops]
         new_resized_crops = np.concatenate(resized_crops, axis=0)
 
-        # print(f"Shape of resized crops: {new_resized_crops.shape}")
         logging.info(f"Resized crops: {len(resized_crops)}")
         logging.info(f"Relabeled labels: {len(relabeled_labels)}")
 
@@ -203,7 +202,7 @@ class NIfTIDataset(Dataset):
 
         self._list_files_in_dir()
         self.limited_files = self.files[start_file_no:end_file_no]
-        print(f"limited files: {self.limited_files}")
+
         for i in range(batch_size):
             # Load the NIfTI images and labels
             idx = random.randint(0, len(self.limited_files) - 1)
@@ -219,8 +218,8 @@ class NIfTIDataset(Dataset):
             if self.transform:
                 image_tensors, labels = self.transform(image_data, label_data)
 
-            print(f"Image tensor shape{image_tensors.shape}")
-            print(f"Label shape {labels}")
+            logging.info(f"Image tensor shape{image_tensors.shape}")
+            logging.info(f"Label shape {labels}")
 
             images_list.append(image_tensors)
             labels_list.append(labels)
@@ -228,8 +227,8 @@ class NIfTIDataset(Dataset):
         concatenated_imgs = np.concatenate(images_list, axis=0)
         labels_list = [label for sublist in labels_list for label in sublist]
 
-        print(f"shape of concatenated images: {concatenated_imgs.shape}")
-        print(f"length for label list: {len(labels_list)}")
+        logging.info(f"Shape of concatenated images: {concatenated_imgs.shape}")
+        logging.info(f"Length for label list: {len(labels_list)}")
 
         dataset = CustomDataset(concatenated_imgs, labels_list)
         return DataLoader(dataset, batch_size=batch_size, shuffle=True)

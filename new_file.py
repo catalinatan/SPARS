@@ -189,9 +189,9 @@ class NIfTIDataset(Dataset):
 
         self.files = list(zip(self.training_files, self.label_files))
  
-        logging.info(f"Found {len(self.training_files)} training files and "
+        print(f"Found {len(self.training_files)} training files and "
               f"{len(self.label_files)} label files.")
-        logging.info(f"Combined into {len(self.files)} pairs.")
+        print(f"Combined into {len(self.files)} pairs.")
 
     def __len__(self):
         return len(self.files)
@@ -250,6 +250,7 @@ def train_network(net, NIFTIDataset, criterion, optimizer):
     Returns:
         None
     """
+    print("Training the network")
     train_loader = NIFTIDataset.data_loader(15, 0, 31)
     test_loader = NIFTIDataset.data_loader(15, 32, 64)
 
@@ -271,7 +272,7 @@ def train_network(net, NIFTIDataset, criterion, optimizer):
 
             running_loss += loss.item()
 
-        logging.info(
+        print(
             (
                 f"Epoch {epoch + 1} - Average Training Loss: "
                 f"{running_loss / len(train_loader):.4f}"
@@ -283,6 +284,7 @@ def train_network(net, NIFTIDataset, criterion, optimizer):
 
         # Save the model weights
         torch.save(net.state_dict(), "model_weights.pth")
+
 
 def test_network(net, val_loader):
     net.eval()  # Set model to evaluation mode
@@ -329,33 +331,34 @@ def test_network(net, val_loader):
         print(f"Sensitivity: {sensitivity:.4f}")
         print(f"Specificity: {specificity:.4f}")
 
-# Define the transformation
-crop_size = (96, 96, 64)
-crop_no = 10
-transform = NRandomCrop(crop_size, crop_no)
+if __name__ == "__main__":
+    # Define the transformation
+    crop_size = (96, 96, 64)
+    crop_no = 10
+    transform = NRandomCrop(crop_size, crop_no)
 
-dir_path="/raid/candi/catalina/Task03_Liver"
+    dir_path="/raid/candi/catalina/Task03_Liver"
 
-patient_names = os.listdir(os.path.join(dir_path, "labelsTr"))
-patient_names = [element for element in patient_names if not element.startswith(".")]
-patient_names = [element for element in patient_names if not element.startswith("._")]
+    patient_names = os.listdir(os.path.join(dir_path, "labelsTr"))
+    patient_names = [element for element in patient_names if not element.startswith(".")]
+    patient_names = [element for element in patient_names if not element.startswith("._")]
 
-# Initialize the dataset
-dataset = NIfTIDataset(dir_path, transform=transform)
+    # Initialize the dataset
+    dataset = NIfTIDataset(dir_path, transform=transform)
 
-# Split the dataset into training, validation, and holdout sets
+    # Split the dataset into training, validation, and holdout sets
 
 
-print("Data set loaded")
-# Define the class labels
-classes = ("no cancer", "cancer")
+    print("Data set loaded")
+    # Define the class labels
+    classes = ("no cancer", "cancer")
 
-# Initialize the neural network
-net = Net()
+    # Initialize the neural network
+    net = Net()
 
-# Define the loss function and optimizer
-criterion = nn.CrossEntropyLoss()
-optimizer = optim.Adam(net.parameters(), lr=0.001)  # Use Adam optimizer
+    # Define the loss function and optimizer
+    criterion = nn.CrossEntropyLoss()
+    optimizer = optim.Adam(net.parameters(), lr=0.001)  # Use Adam optimizer
 
-# Train the network
-train_network(net, dataset, criterion, optimizer)
+    # Train the network
+    train_network(net, dataset, criterion, optimizer)

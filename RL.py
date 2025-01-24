@@ -47,9 +47,17 @@ class CursorImageEnv(gym.Env):
     def step(self, action):
         if action == 0: 
             self.cursor_position = cursor_position + np.array([0, 0, 4])
+        if action == 1:
+            self.cursor_position = cursor_position + np.array([0, 0, -4])
+        if action == 2:
+            self.cursor_position = cursor_position + np.array([0, 4, 0])
+        if action == 3:
+            self.cursor_position = cursor_position + np.array([0, -4, 0])
+        if action == 4:
+            self.cursor_position = cursor_position + np.array([4, 0, 0])
+        if action == 5:
+            self.cursor_position = cursor_position + np.array([-4, 0, 0])
 
-        # if statements for each direction (up, down, left, right, forward, backward) left right, forward, backward
-        # get new cursor position after each direction
         # user cursor position to crop the image == observation
         # pass through crop through the classifier --> reward
         self.cursor_position = np.clip(self.cursor_position + direction, 0, self.full_image_size[:2])

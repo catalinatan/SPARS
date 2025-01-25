@@ -227,8 +227,8 @@ class NIfTIDataset(Dataset):
         concatenated_imgs = np.concatenate(images_list, axis=0)
         labels_list = [label for sublist in labels_list for label in sublist]
 
-        logging.info(f"Shape of concatenated images: {concatenated_imgs.shape}")
-        logging.info(f"Length for label list: {len(labels_list)}")
+        print(f"Shape of concatenated images: {concatenated_imgs.shape}")
+        print(f"Length for label list: {len(labels_list)}")
 
         dataset = CustomDataset(concatenated_imgs, labels_list)
         return DataLoader(dataset, batch_size=batch_size, shuffle=True)
@@ -252,7 +252,9 @@ def train_network(net, NIFTIDataset, criterion, optimizer):
     """
     print("Training the network")
     train_loader = NIFTIDataset.data_loader(15, 0, 31)
+    print("Training data loaded")
     test_loader = NIFTIDataset.data_loader(15, 32, 64)
+    print("Test data loaded")
 
     for epoch in range(2):  # Reduce number of epochs
         net.train()
@@ -279,6 +281,7 @@ def train_network(net, NIFTIDataset, criterion, optimizer):
             )
         )
 
+        print("Evaluating the network")
         # Evaluate the network on the validation data
         test_network(net, test_loader)
 

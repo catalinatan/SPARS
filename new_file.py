@@ -205,7 +205,8 @@ class NIfTIDataset(Dataset):
         print(f"Length of files: {len(self.files)}")
 
         self.limited_files = self.files[start_file_no:end_file_no]
-        
+        print(f"Length of limited files: {len(self.limited_files)}")
+
         if batch_size < len(self.limited_files):
             batch_size = len(self.limited_files)
 
@@ -229,6 +230,7 @@ class NIfTIDataset(Dataset):
 
             images_list.append(image_tensors)
             labels_list.append(labels)
+            print("Images and labels appended")
 
         concatenated_imgs = np.concatenate(images_list, axis=0)
         labels_list = [label for sublist in labels_list for label in sublist]
@@ -257,12 +259,12 @@ def train_network(net, NIFTIDataset, criterion, optimizer):
         None
     """
     print("Training the network")
-    train_loader = NIFTIDataset.data_loader(2, 0, 4)
+    train_loader = NIFTIDataset.data_loader(2, 0, 16)
     print("Training data loaded")
-    test_loader = NIFTIDataset.data_loader(2, 4, 8)
+    test_loader = NIFTIDataset.data_loader(2, 16, 32)
     print("Test data loaded")
 
-    for epoch in range(2):  # Reduce number of epochs
+    for epoch in range(16): 
         net.train()
         running_loss = 0.0
 

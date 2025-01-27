@@ -10,6 +10,7 @@ import torch.nn as nn
 import torch.optim as optim
 import torch.nn.functional as F
 import logging
+from tqdm import tqdm
 
 def resize_image(img_data):
     # Define target shape for the resized image
@@ -202,6 +203,9 @@ class NIfTIDataset(Dataset):
 
         self._list_files_in_dir()
         self.limited_files = self.files[start_file_no:end_file_no]
+        
+        if batch_size < len(self.limited_files):
+            batch_size = len(self.limited_files)
 
         for i in range(batch_size):
             # Load the NIfTI images and labels
@@ -251,16 +255,16 @@ def train_network(net, NIFTIDataset, criterion, optimizer):
         None
     """
     print("Training the network")
-    train_loader = NIFTIDataset.data_loader(15, 0, 31)
+    train_loader = NIFTIDataset.data_loader(16, 0, 64)
     print("Training data loaded")
-    test_loader = NIFTIDataset.data_loader(15, 32, 64)
+    test_loader = NIFTIDataset.data_loader(16, 64, 128)
     print("Test data loaded")
 
     for epoch in range(2):  # Reduce number of epochs
         net.train()
         running_loss = 0.0
 
-        for inputs, labels in train_loader:
+        for inputs, labels in tqdm(train_loader, desc="Training Progress"):
             optimizer.zero_grad()
 
             # Forward pass
@@ -348,9 +352,6 @@ if __name__ == "__main__":
 
     # Initialize the dataset
     dataset = NIfTIDataset(dir_path, transform=transform)
-
-    # Split the dataset into training, validation, and holdout sets
-
 
     print("Data set loaded")
     # Define the class labels

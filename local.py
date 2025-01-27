@@ -9,7 +9,6 @@ import torch.nn as nn
 import torch.optim as optim
 import torch.nn.functional as F
 
-
 def resize_image(nifti_image, target_shape=(128, 128, 90)):  # Smaller target shape
     """
     Resizes a NIfTI image to the target shape using bilinear interpolation.

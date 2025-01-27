@@ -255,9 +255,9 @@ def train_network(net, NIFTIDataset, criterion, optimizer):
         None
     """
     print("Training the network")
-    train_loader = NIFTIDataset.data_loader(16, 0, 64)
+    train_loader = NIFTIDataset.data_loader(4, 0, 16)
     print("Training data loaded")
-    test_loader = NIFTIDataset.data_loader(16, 64, 128)
+    test_loader = NIFTIDataset.data_loader(4, 16, 32)
     print("Test data loaded")
 
     for epoch in range(2):  # Reduce number of epochs

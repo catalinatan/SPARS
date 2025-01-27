@@ -202,6 +202,8 @@ class NIfTIDataset(Dataset):
         labels_list = []
 
         self._list_files_in_dir()
+        print(f"Length of files: {len(self.files)}")
+
         self.limited_files = self.files[start_file_no:end_file_no]
         
         if batch_size < len(self.limited_files):
@@ -255,9 +257,9 @@ def train_network(net, NIFTIDataset, criterion, optimizer):
         None
     """
     print("Training the network")
-    train_loader = NIFTIDataset.data_loader(4, 0, 16)
+    train_loader = NIFTIDataset.data_loader(2, 0, 4)
     print("Training data loaded")
-    test_loader = NIFTIDataset.data_loader(4, 16, 32)
+    test_loader = NIFTIDataset.data_loader(2, 4, 8)
     print("Test data loaded")
 
     for epoch in range(2):  # Reduce number of epochs
@@ -345,10 +347,6 @@ if __name__ == "__main__":
     transform = NRandomCrop(crop_size, crop_no)
 
     dir_path="/raid/candi/catalina/Task03_Liver"
-
-    patient_names = os.listdir(os.path.join(dir_path, "labelsTr"))
-    patient_names = [element for element in patient_names if not element.startswith(".")]
-    patient_names = [element for element in patient_names if not element.startswith("._")]
 
     # Initialize the dataset
     dataset = NIfTIDataset(dir_path, transform=transform)

@@ -273,7 +273,7 @@ def train_network(net, NIFTIDataset, criterion, optimizer):
         net.train()
         running_loss = 0.0
 
-        for inputs, labels in tqdm(range(no_of_batches), desc="Training Progress"):
+        for i in tqdm(range(no_of_batches), desc="Training Progress"):
             inputs, labels = NIfTIDataset.get_data_batch(2, start_file_no, end_file_no)
             optimizer.zero_grad()
 

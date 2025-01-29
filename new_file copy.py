@@ -261,11 +261,9 @@ def train_network(net, NIFTIDataset, criterion, optimizer):
     Returns:
         None
     """
-    print("Training the network")
-    train_loader = NIFTIDataset.data_loader(2, 0, 16)
-    print("Training data loaded")
-    test_loader = NIFTIDataset.data_loader(2, 16, 32)
-    print("Test data loaded")
+    # print("Training data loaded")
+    # test_loader = NIFTIDataset.data_loader(2, 16, 32)
+    # print("Test data loaded")
 
     no_of_batches = 4
     start_file_no = 0

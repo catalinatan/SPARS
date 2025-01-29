@@ -300,11 +300,12 @@ def train_network(net, dataset_object, criterion, optimizer):
         )
 
         print("Evaluating the network")
-        # Evaluate the network on the validation data
-        test_network(net, dataset_object)
 
         # Save the model weights
         torch.save(net.state_dict(), "model_weights.pth")
+
+    # Evaluate the network on the validation data
+    test_network(net, dataset_object)
 
 
 def test_network(net, dataset_object):

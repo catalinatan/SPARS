@@ -198,6 +198,8 @@ class NIfTIDataset(Dataset):
         return len(self.files)
     
     def get_data_batch(self, batch_size, start_file_no=0, end_file_no=1):
+        print(self)
+
         images_list = []
         labels_list = []
 
@@ -274,7 +276,6 @@ def train_network(net, NIFTIDataset, criterion, optimizer):
         running_loss = 0.0
 
         for i in tqdm(range(no_of_batches), desc="Training Progress"):
-            print(f"List of files; {NIFTIDataset._list_files_in_dir}")
             inputs, labels = NIfTIDataset.get_data_batch(2, start_file_no, end_file_no)
             optimizer.zero_grad()
 

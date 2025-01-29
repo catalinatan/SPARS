@@ -232,7 +232,10 @@ class NIfTIDataset(Dataset):
             labels_list.append(labels)
             print("Images and labels appended")
 
+        print("Before concatenated images")
         concatenated_imgs = np.concatenate(images_list, axis=0)
+        print("After concatenated images")
+        
         labels_list = [label for sublist in labels_list for label in sublist]
 
         print(f"Shape of concatenated images: {concatenated_imgs.shape}")

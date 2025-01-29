@@ -165,6 +165,9 @@ class NIfTIDataset():
         self.files = []
         self.transform = transform
 
+        self._list_files_in_dir()
+
+
     def _list_files_in_dir(self):
         """
         Lists and pairs the training and label files in the directory.
@@ -200,7 +203,6 @@ class NIfTIDataset():
         images_list = []
         labels_list = []
 
-        self._list_files_in_dir()
         print(f"Length of files: {len(self.files)}")
 
         self.limited_files = self.files[start_file_no:end_file_no]
@@ -229,6 +231,8 @@ class NIfTIDataset():
 
             images_list.append(image_tensors)
             labels_list.append(labels)
+
+            print('iter': i)
 
         print("Before concatenated images")
         concatenated_imgs = np.concatenate(images_list, axis=0)

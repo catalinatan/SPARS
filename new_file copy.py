@@ -295,7 +295,7 @@ def train_network(net, dataset_object, criterion, optimizer):
         print(
             (
                 f"Epoch {epoch + 1} - Average Training Loss: "
-                f"{running_loss / len(train_loader):.4f}"
+                f"{running_loss / no_of_batches:.4f}"
             )
         )
 

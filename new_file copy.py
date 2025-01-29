@@ -263,7 +263,7 @@ def train_network(net, dataset_object, criterion, optimizer):
     # test_loader = NIFTIDataset.data_loader(2, 16, 32)
     # print("Test data loaded")
 
-    no_of_batches = 32
+    no_of_batches = 2
     start_file_no = 0
     end_file_no = 16
     batch_size = 2
@@ -301,20 +301,26 @@ def train_network(net, dataset_object, criterion, optimizer):
 
         print("Evaluating the network")
         # Evaluate the network on the validation data
-        test_network(net, test_loader)
+        test_network(net, dataset_object)
 
         # Save the model weights
         torch.save(net.state_dict(), "model_weights.pth")
 
 
-def test_network(net, val_loader):
+def test_network(net, dataset_object):
     net.eval()  # Set model to evaluation mode
 
     # Initialize confusion matrix counters
     true_positives, true_negatives, false_positives, false_negatives = 0, 0, 0, 0
 
+    no_of_batches = 2
+    start_file_no = 16
+    end_file_no = 32
+    batch_size = 2
+
     with torch.no_grad():
-        for images, labels in val_loader:
+        for i in range(no_of_batches):
+            images, labels = dataset_object.get_data_batch(batch_size, start_file_no, end_file_no)
             outputs = net(images)
             _, predicted = torch.max(outputs, 1)
             matches = (predicted == labels)

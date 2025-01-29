@@ -232,7 +232,7 @@ class NIfTIDataset():
             images_list.append(image_tensors)
             labels_list.append(labels)
 
-            print('iter': i)
+            print(f"iter: {i}")
 
         print("Before concatenated images")
         concatenated_imgs = np.concatenate(images_list, axis=0)

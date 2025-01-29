@@ -229,7 +229,6 @@ class NIfTIDataset():
 
             images_list.append(image_tensors)
             labels_list.append(labels)
-            print("Images and labels appended")
 
         print("Before concatenated images")
         concatenated_imgs = np.concatenate(images_list, axis=0)
@@ -263,16 +262,22 @@ def train_network(net, dataset_object, criterion, optimizer):
     # test_loader = NIFTIDataset.data_loader(2, 16, 32)
     # print("Test data loaded")
 
-    no_of_batches = 4
+    no_of_batches = 32
     start_file_no = 0
     end_file_no = 16
+    batch_size = 2
 
     for epoch in range(16): 
         net.train()
         running_loss = 0.0
 
+        print('epoch:', epoch + 1)
+
         for i in tqdm(range(no_of_batches), desc="Training Progress"):
-            inputs, labels = dataset_object.get_data_batch(2, start_file_no, end_file_no)
+            inputs, labels = dataset_object.get_data_batch(batch_size, start_file_no, end_file_no)
+
+            print('got data batch')
+
             optimizer.zero_grad()
 
             # Forward pass

@@ -240,7 +240,7 @@ class NIfTIDataset():
         print(f"Shape of concatenated images: {concatenated_imgs.shape}")
         print(f"Length for label list: {len(labels_list)}")
 
-        return concatenated_imgs, np.array(labels_list)
+        return torch.tensor(concatenated_imgs), torch.tensor(np.array(labels_list))
     
     
 def train_network(net, dataset_object, criterion, optimizer):

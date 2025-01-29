@@ -243,7 +243,7 @@ class NIfTIDataset():
         return concatenated_imgs, labels_list
     
     
-def train_network(net, NIFTIDataset, criterion, optimizer):
+def train_network(net, dataset_object, criterion, optimizer):
     """
     Trains the network on the training data and evaluates on the
     validation data.
@@ -263,8 +263,6 @@ def train_network(net, NIFTIDataset, criterion, optimizer):
     # test_loader = NIFTIDataset.data_loader(2, 16, 32)
     # print("Test data loaded")
 
-    nifti_dataset = NIfTIDataset()
-
     no_of_batches = 4
     start_file_no = 0
     end_file_no = 16
@@ -274,7 +272,7 @@ def train_network(net, NIFTIDataset, criterion, optimizer):
         running_loss = 0.0
 
         for i in tqdm(range(no_of_batches), desc="Training Progress"):
-            inputs, labels = nifti_dataset.get_data_batch(2, start_file_no, end_file_no)
+            inputs, labels = dataset_object.get_data_batch(2, start_file_no, end_file_no)
             optimizer.zero_grad()
 
             # Forward pass

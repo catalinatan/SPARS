@@ -264,7 +264,7 @@ def train_network(net, NIFTIDataset, criterion, optimizer):
     test_loader = NIFTIDataset.data_loader(2, 4, 8)
     print("Test data loaded")
 
-    for epoch in range(4): 
+    for epoch in range(16): 
         net.train()
         running_loss = 0.0
 

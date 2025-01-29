@@ -207,7 +207,7 @@ class NIfTIDataset():
 
         self.limited_files = self.files[start_file_no:end_file_no]
         print(f"Length of limited files: {len(self.limited_files)}")
-        
+    
         for i in range(batch_size):
             # Load the NIfTI images and labels
             idx = random.randint(0, len(self.limited_files) - 1)
@@ -240,7 +240,7 @@ class NIfTIDataset():
         print(f"Shape of concatenated images: {concatenated_imgs.shape}")
         print(f"Length for label list: {len(labels_list)}")
 
-        return concatenated_imgs, labels_list
+        return concatenated_imgs, np.array(labels_list)
     
     
 def train_network(net, dataset_object, criterion, optimizer):

@@ -153,7 +153,7 @@ class CustomDataset(Dataset):
         label = self.labels[idx]
         return image, label
     
-class NIfTIDataset(Dataset):
+class NIfTIDataset():
     def __init__(self, dir_path, transform=None):
         """
         Custom Dataset for loading NIfTI images from a directory.
@@ -189,16 +189,13 @@ class NIfTIDataset(Dataset):
         self.training_files = [element.replace("labelsTr", "imagesTr") for element in self.label_files]
 
         self.files = list(zip(self.training_files, self.label_files))
- 
         print(f"Found {len(self.training_files)} training files and "
               f"{len(self.label_files)} label files.")
         print(f"Combined into {len(self.files)} pairs.")
-
     def __len__(self):
         return len(self.files)
     
     def get_data_batch(self, batch_size, start_file_no=0, end_file_no=1):
-        print(self)
 
         images_list = []
         labels_list = []
@@ -243,7 +240,6 @@ class NIfTIDataset(Dataset):
         print(f"Shape of concatenated images: {concatenated_imgs.shape}")
         print(f"Length for label list: {len(labels_list)}")
 
-        #dataset = CustomDataset(concatenated_imgs, labels_list)
         return concatenated_imgs, labels_list
     
     
@@ -267,6 +263,8 @@ def train_network(net, NIFTIDataset, criterion, optimizer):
     # test_loader = NIFTIDataset.data_loader(2, 16, 32)
     # print("Test data loaded")
 
+    nifti_dataset = NIfTIDataset()
+
     no_of_batches = 4
     start_file_no = 0
     end_file_no = 16
@@ -276,7 +274,7 @@ def train_network(net, NIFTIDataset, criterion, optimizer):
         running_loss = 0.0
 
         for i in tqdm(range(no_of_batches), desc="Training Progress"):
-            inputs, labels = NIfTIDataset.get_data_batch(2, start_file_no, end_file_no)
+            inputs, labels = nifti_dataset.get_data_batch(2, start_file_no, end_file_no)
             optimizer.zero_grad()
 
             # Forward pass

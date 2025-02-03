@@ -154,7 +154,7 @@ class CustomDataset(Dataset):
         return image, label
     
 class NIfTIDataset():
-    def __init__(self, dir_path, transform=None):
+    def __init__(self, dir_path, start_file_no, end_file_no, transform=None):
         """
         Custom Dataset for loading NIfTI images from a directory.
         Args:
@@ -166,7 +166,9 @@ class NIfTIDataset():
         self.transform = transform
 
         self._list_files_in_dir()
-
+        
+        self.limited_files = self.files[start_file_no:end_file_no]
+        print(f"Length of limited files: {len(self.limited_files)}")
 
     def _list_files_in_dir(self):
         """
@@ -196,20 +198,16 @@ class NIfTIDataset():
               f"{len(self.label_files)} label files.")
         print(f"Combined into {len(self.files)} pairs.")
         print(self.files)
-        
+
     def __len__(self):
         return len(self.files)
     
-    def get_data_batch(self, batch_size, start_file_no=0, end_file_no=1):
+    def get_data_batch(self, batch_size):
 
         images_list = []
         labels_list = []
 
         print(f"Length of files: {len(self.files)}")
-        
-
-        self.limited_files = self.files[start_file_no:end_file_no]
-        print(f"Length of limited files: {len(self.limited_files)}")
     
         for i in range(batch_size):
             # Load the NIfTI images and labels
@@ -246,7 +244,7 @@ class NIfTIDataset():
         return torch.tensor(concatenated_imgs), torch.tensor(np.array(labels_list))
     
     
-def train_network(net, dataset_object, criterion, optimizer):
+def train_network(net, train_dataset, test_dataset, criterion, optimizer):
     """
     Trains the network on the training data and evaluates on the
     validation data.
@@ -262,13 +260,8 @@ def train_network(net, dataset_object, criterion, optimizer):
     Returns:
         None
     """
-    # print("Training data loaded")
-    # test_loader = NIFTIDataset.data_loader(2, 16, 32)
-    # print("Test data loaded")
 
     no_of_batches = 2
-    start_file_no = 0
-    end_file_no = 16
     batch_size = 2
 
     for epoch in range(16): 
@@ -278,9 +271,7 @@ def train_network(net, dataset_object, criterion, optimizer):
         print('epoch:', epoch + 1)
 
         for i in tqdm(range(no_of_batches), desc="Training Progress"):
-            inputs, labels = dataset_object.get_data_batch(batch_size, start_file_no, end_file_no)
-
-            print('got data batch')
+            inputs, labels = train_dataset.get_data_batch(batch_size)
 
             optimizer.zero_grad()
 
@@ -304,7 +295,7 @@ def train_network(net, dataset_object, criterion, optimizer):
 
         print("Evaluating the network")
         # Evaluate the network on the validation data
-        test_network(net, dataset_object)
+        test_network(net, test_dataset)
         # Save the model weights
         torch.save(net.state_dict(), "model_weights.pth")
 
@@ -316,13 +307,11 @@ def test_network(net, dataset_object):
     true_positives, true_negatives, false_positives, false_negatives = 0, 0, 0, 0
 
     no_of_batches = 2
-    start_file_no = 16
-    end_file_no = 32
     batch_size = 2
 
     with torch.no_grad():
         for i in range(no_of_batches):
-            images, labels = dataset_object.get_data_batch(batch_size, start_file_no, end_file_no)
+            images, labels = dataset_object.get_data_batch(batch_size)
             outputs = net(images)
             _, predicted = torch.max(outputs, 1)
             matches = (predicted == labels)
@@ -368,10 +357,15 @@ if __name__ == "__main__":
 
     dir_path="/raid/candi/catalina/Task03_Liver"
 
-    # Initialize the dataset
-    dataset = NIfTIDataset(dir_path, transform=transform)
+    train_start_file_no = 0 
+    train_start_file_no = 16
+    test_start_file_no = 16
+    test_end_file_no = 32
 
-    print("Data set loaded")
+    # Initialize the dataset
+    train_dataset = NIfTIDataset(dir_path, train_start_file_no, train_start_file_no, transform=transform)
+    test_dataset =  NIfTIDataset(dir_path, test_start_file_no, test_end_file_no, transform=transform)
+
     # Define the class labels
     classes = ("no cancer", "cancer")
 
@@ -383,4 +377,4 @@ if __name__ == "__main__":
     optimizer = optim.Adam(net.parameters(), lr=0.001)  # Use Adam optimizer
 
     # Train the network
-    train_network(net, dataset, criterion, optimizer)
+    train_network(net, train_dataset, test_dataset, criterion, optimizer)

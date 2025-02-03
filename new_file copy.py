@@ -212,7 +212,7 @@ class NIfTIDataset():
     
         for i in range(batch_size):
             # Load the NIfTI images and labels
-            idx = random.randint(0, len(self.limited_files) - 1)
+            idx = np.random.randint(0, len(self.limited_files) - 1)
             image_file, label_file = self.limited_files[idx]
 
             # Load NIfTI images using nibabel

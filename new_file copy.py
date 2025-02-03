@@ -170,7 +170,6 @@ class NIfTIDataset():
         print(f"Length of self.files {len(self.files)}")
         self.limited_files = self.files[start_file_no:end_file_no]
         print(f"Length of limited files: {len(self.limited_files)}")
-        print(self.limited_files)
 
     def _list_files_in_dir(self):
         """
@@ -210,7 +209,6 @@ class NIfTIDataset():
         images_list = []
         labels_list = []
 
-        print(self.limited_files)
         for i in range(batch_size):
             # Load the NIfTI images and labels
             idx = np.random.randint(0, len(self.limited_files) - 1)
@@ -360,12 +358,12 @@ if __name__ == "__main__":
     dir_path="/raid/candi/catalina/Task03_Liver"
 
     train_start_file_no = 0 
-    train_start_file_no = 16
+    train_end_file_no = 16
     test_start_file_no = 16
     test_end_file_no = 32
 
     # Initialize the dataset
-    train_dataset = NIfTIDataset(dir_path, train_start_file_no, train_start_file_no, transform=transform)
+    train_dataset = NIfTIDataset(dir_path, train_start_file_no, train_end_file_no, transform=transform)
     test_dataset =  NIfTIDataset(dir_path, test_start_file_no, test_end_file_no, transform=transform)
 
     # Define the class labels

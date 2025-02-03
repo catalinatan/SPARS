@@ -165,8 +165,6 @@ class NIfTIDataset():
         self.files = self._list_files_in_dir()
         self.transform = transform
         
-        print(f"Start file no: {start_file_no}")
-        print(f"end file no {end_file_no}")
         print(f"Length of self.files {len(self.files)}")
         self.limited_files = self.files[start_file_no:end_file_no]
         print(f"Length of limited files: {len(self.limited_files)}")
@@ -271,8 +269,12 @@ def train_network(net, train_dataset, test_dataset, criterion, optimizer):
         print('epoch:', epoch + 1)
 
         for i in tqdm(range(no_of_batches), desc="Training Progress"):
-            inputs, labels = train_dataset.get_data_batch(batch_size)
+            print(f"batch: {i}")
 
+            inputs, labels = train_dataset.get_data_batch(batch_size)
+            
+            print(f"Inputs shape: {inputs.shape}")
+            print(f"Labels shape: {labels.shape}")
             optimizer.zero_grad()
 
             # Forward pass

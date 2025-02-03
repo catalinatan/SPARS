@@ -162,10 +162,8 @@ class NIfTIDataset():
             transform (callable, optional): Optional transform to be applied on a sample.
         """
         self.dir_path = dir_path
-        self.files = []
+        self.files = self._list_files_in_dir()
         self.transform = transform
-
-        self._list_files_in_dir()
         
         self.limited_files = self.files[start_file_no:end_file_no]
         print(f"Length of limited files: {len(self.limited_files)}")
@@ -199,6 +197,8 @@ class NIfTIDataset():
               f"{len(self.label_files)} label files.")
         print(f"Combined into {len(self.files)} pairs.")
         print(self.files)
+
+        return self.files
 
     def __len__(self):
         return len(self.files)

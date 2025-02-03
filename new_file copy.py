@@ -195,6 +195,8 @@ class NIfTIDataset():
         print(f"Found {len(self.training_files)} training files and "
               f"{len(self.label_files)} label files.")
         print(f"Combined into {len(self.files)} pairs.")
+        print(self.files)
+        
     def __len__(self):
         return len(self.files)
     
@@ -204,8 +206,8 @@ class NIfTIDataset():
         labels_list = []
 
         print(f"Length of files: {len(self.files)}")
-        print(self.files)
         
+
         self.limited_files = self.files[start_file_no:end_file_no]
         print(f"Length of limited files: {len(self.limited_files)}")
     

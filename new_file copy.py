@@ -165,6 +165,8 @@ class NIfTIDataset():
         self.files = self._list_files_in_dir()
         self.transform = transform
         
+        print(f"Start file no: {start_file_no}")
+        print(f"end file no {end_file_no}")
         print(f"Length of self.files {len(self.files)}")
         self.limited_files = self.files[start_file_no:end_file_no]
         print(f"Length of limited files: {len(self.limited_files)}")
@@ -208,7 +210,6 @@ class NIfTIDataset():
         images_list = []
         labels_list = []
 
-        print(f"Length of limited files: {len(self.limited_files)}")
         print(self.limited_files)
         for i in range(batch_size):
             # Load the NIfTI images and labels

@@ -204,7 +204,8 @@ class NIfTIDataset():
         labels_list = []
 
         print(f"Length of files: {len(self.files)}")
-
+        print(self.files)
+        
         self.limited_files = self.files[start_file_no:end_file_no]
         print(f"Length of limited files: {len(self.limited_files)}")
     
@@ -304,8 +305,6 @@ def train_network(net, dataset_object, criterion, optimizer):
         test_network(net, dataset_object)
         # Save the model weights
         torch.save(net.state_dict(), "model_weights.pth")
-
-
 
 
 def test_network(net, dataset_object):

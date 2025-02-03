@@ -209,7 +209,8 @@ class NIfTIDataset():
         labels_list = []
 
         print(f"Length of files: {len(self.files)}")
-    
+        print(f"Length of limited files: {len(self.limited_files)}")
+        print(self.limited_files)
         for i in range(batch_size):
             # Load the NIfTI images and labels
             idx = np.random.randint(0, len(self.limited_files) - 1)

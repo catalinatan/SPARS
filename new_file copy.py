@@ -169,6 +169,7 @@ class NIfTIDataset():
         
         self.limited_files = self.files[start_file_no:end_file_no]
         print(f"Length of limited files: {len(self.limited_files)}")
+        print(self.limited_files)
 
     def _list_files_in_dir(self):
         """

@@ -11,13 +11,14 @@ import torch.optim as optim
 import torch.nn.functional as F
 import logging
 from tqdm import tqdm
+import skimage 
 
 def resize_image(img_data):
     # Define target shape for the resized image
     target_shape = (256, 256, 180)
 
     # Convert input to a PyTorch tensor and add batch and channel dimensions
-    img_tensor = torch.tensor(img_data, dtype=torch.float32).unsqueeze(0).unsqueeze(0)  # Shape: (1, 1, D, H, W)
+    img_tensor = torch.tensor(img_data, dtype=torch.float32).unsqueeze(0).unsqueeze(0)
 
     # Resize using torch.nn.functional.interpolate (trilinear interpolation)
     resized_tensor = F.interpolate(img_tensor, size=target_shape, mode='trilinear', align_corners=False)
@@ -33,55 +34,94 @@ class NRandomCrop:
         self.crop_no = crop_no
 
     def __call__(self, images, labels):
+        labels[labels == 1] = 0
+        labels[labels == 2] = 1
+
+        labels = skimage.morphology.binary_dilation(labels)
+
         crops = []
         label_crops = []
-        relabeled_labels = []
         d, h, w = images.shape
-        pos_counter, neg_counter = 0, 0
 
-        while len(crops) < self.crop_no:
-            d_start = random.randint(0, d - self.crop_size[0])
-            h_start = random.randint(0, h - self.crop_size[1])
-            w_start = random.randint(0, w - self.crop_size[2])
+        # Assuming labels is a 3D tensor with shape (512, 512, 72)
+        labels = torch.tensor(labels)
+        pos_crop_idx = torch.nonzero(labels == 1, as_tuple=False)
+        neg_crop_idx = torch.nonzero(labels == 0, as_tuple=False) 
+        # torch object with shape (n, 3) where n is the number of positive crops and 3 is the number of dimensions
+        
+        # Filter negative crop indexes to ensure that the crop size fits within the image
+        neg_crop_idx[0] = np.clip(neg_crop_idx[0], 0, d - self.crop_size[0] - 1)
+        neg_crop_idx[1] = np.clip(neg_crop_idx[1], 0, h - self.crop_size[1] - 1)
+        neg_crop_idx[2] = np.clip(neg_crop_idx[2], 0, w - self.crop_size[2] - 1)
+       
+        if len(pos_crop_idx) == 0 and len(neg_crop_idx) >= self.crop_no:
+            for i in range(self.crop_no):
+                random_neg_idx = random.choice(neg_crop_idx)
 
-            # Adjust starting indices to ensure valid crop size
-            if d_start + self.crop_size[0] > d:
-                d_start = d - self.crop_size[0]
-            if h_start + self.crop_size[1] > h:
-                h_start = h - self.crop_size[1]
-            if w_start + self.crop_size[2] > w:
-                w_start = w - self.crop_size[2]
+                d_start, h_start, w_start = random_neg_idx
 
-            crop = images[d_start:d_start + self.crop_size[0],
-                          h_start:h_start + self.crop_size[1],
-                          w_start:w_start + self.crop_size[2]]
-            label_crop = labels[d_start:d_start + self.crop_size[0],
-                                h_start:h_start + self.crop_size[1],
-                                w_start:w_start + self.crop_size[2]]
+                crop = images[d_start:d_start + self.crop_size[0],
+                            h_start:h_start + self.crop_size[1],
+                            w_start:w_start + self.crop_size[2]]
+                label_crop = labels[d_start:d_start + self.crop_size[0],
+                                    h_start:h_start + self.crop_size[1],
+                                    w_start:w_start + self.crop_size[2]]
 
-            max_label = torch.max(torch.tensor(label_crop.flatten()), dim=0)[0].item()
-            relabeled = 1 if max_label == 2 else 0
+                resized_crop = resize_image(crop)
+                resized_label_crop = resize_image(label_crop)
 
-            if relabeled == 1 and pos_counter < self.crop_no / 2:
-                crop = resize_image(crop)
-                crops.append(crop)
-                label_crops.append(label_crop)
-                relabeled_labels.append(relabeled)
-                pos_counter += 1
-            elif relabeled == 0 and neg_counter < self.crop_no / 2:
-                crop = resize_image(crop)
-                crops.append(crop)
-                label_crops.append(label_crop)
-                relabeled_labels.append(relabeled)
-                neg_counter += 1
+                crops.append(resized_crop)
+                label_crops.append(resized_label_crop)
+            
+        elif len(pos_crop_idx) and len(neg_crop_idx):
+            for i in range(int(self.crop_no / 2)):
+                random_pos_idx = random.choice(pos_crop_idx)
+
+                d_start, h_start, w_start = random_pos_idx
+
+                crop = images[d_start:d_start + self.crop_size[0],
+                            h_start:h_start + self.crop_size[1],
+                            w_start:w_start + self.crop_size[2]]
+                
+                label_crop = labels[d_start:d_start + self.crop_size[0],
+                                    h_start:h_start + self.crop_size[1],
+                                    w_start:w_start + self.crop_size[2]]
+
+                resized_crop = resize_image(crop)
+                resized_label_crop = resize_image(label_crop)
+
+                crops.append(resized_crop)
+                label_crops.append(resized_label_crop)
+
+            for i in range(int(self.crop_no / 2)):
+                random_neg_idx = random.choice(neg_crop_idx)
+
+                d_start, h_start, w_start = random_neg_idx
+
+                crop = images[d_start:d_start + self.crop_size[0],
+                            h_start:h_start + self.crop_size[1],
+                            w_start:w_start + self.crop_size[2]]
+                
+                label_crop = labels[d_start:d_start + self.crop_size[0],
+                                    h_start:h_start + self.crop_size[1],
+                                    w_start:w_start + self.crop_size[2]]
+
+                resized_crop = resize_image(crop)
+                resized_label_crop = resize_image(label_crop)
+
+                crops.append(resized_crop)
+                label_crops.append(resized_label_crop)
 
         resized_crops = [crop.unsqueeze(0).unsqueeze(0) for crop in crops]
         new_resized_crops = np.concatenate(resized_crops, axis=0)
 
-        logging.info(f"Resized crops: {len(resized_crops)}")
-        logging.info(f"Relabeled labels: {len(relabeled_labels)}")
+        resized_label_crops = [label_crop.unsqueeze(0).unsqueeze(0) for label_crop in label_crops]
+        new_resized_label_crops = np.concatenate(resized_label_crops, axis=0)
+        
+        print(f"Resized crops shape: {new_resized_crops.shape}")
+        print(f"Resized label crops shape: {new_resized_label_crops.shape}")
 
-        return new_resized_crops, relabeled_labels
+        return new_resized_crops, new_resized_label_crops
     
 class Net(nn.Module):
     """
@@ -154,7 +194,7 @@ class CustomDataset(Dataset):
         return image, label
     
 class NIfTIDataset():
-    def __init__(self, dir_path, start_file_no, end_file_no, transform=None):
+    def __init__(self, dir_path, transform=None):
         """
         Custom Dataset for loading NIfTI images from a directory.
         Args:
@@ -162,12 +202,11 @@ class NIfTIDataset():
             transform (callable, optional): Optional transform to be applied on a sample.
         """
         self.dir_path = dir_path
-        self.files = self._list_files_in_dir()
+        self.files = []
         self.transform = transform
-        
-        print(f"Length of self.files {len(self.files)}")
-        self.limited_files = self.files[start_file_no:end_file_no]
-        print(f"Length of limited files: {len(self.limited_files)}")
+
+        self._list_files_in_dir()
+
 
     def _list_files_in_dir(self):
         """
@@ -196,20 +235,22 @@ class NIfTIDataset():
         print(f"Found {len(self.training_files)} training files and "
               f"{len(self.label_files)} label files.")
         print(f"Combined into {len(self.files)} pairs.")
-
-        return self.files
-
     def __len__(self):
         return len(self.files)
     
-    def get_data_batch(self, batch_size):
+    def get_data_batch(self, batch_size, start_file_no=0, end_file_no=1):
 
         images_list = []
         labels_list = []
 
+        print(f"Length of files: {len(self.files)}")
+
+        self.limited_files = self.files[start_file_no:end_file_no]
+        print(f"Length of limited files: {len(self.limited_files)}")
+    
         for i in range(batch_size):
             # Load the NIfTI images and labels
-            idx = np.random.randint(0, len(self.limited_files) - 1)
+            idx = random.randint(0, len(self.limited_files) - 1)
             image_file, label_file = self.limited_files[idx]
 
             # Load NIfTI images using nibabel
@@ -223,26 +264,23 @@ class NIfTIDataset():
                 image_tensors, labels = self.transform(image_data, label_data)
 
             logging.info(f"Image tensor shape{image_tensors.shape}")
-            logging.info(f"Label shape {labels}")
+            logging.info(f"Label shape {labels.shape}")
 
             images_list.append(image_tensors)
             labels_list.append(labels)
 
             print(f"iter: {i}")
 
-        print("Before concatenated images")
         concatenated_imgs = np.concatenate(images_list, axis=0)
-        print("After concatenated images")
-        
-        labels_list = [label for sublist in labels_list for label in sublist]
+        concatenated_labels = np.concatenate(labels_list, axis=0)
 
         print(f"Shape of concatenated images: {concatenated_imgs.shape}")
-        print(f"Length for label list: {len(labels_list)}")
+        print(f"Shape for label list: {concatenated_labels.shape}")
 
-        return torch.tensor(concatenated_imgs), torch.tensor(np.array(labels_list))
+        return torch.tensor(concatenated_imgs), torch.tensor(concatenated_labels)
     
     
-def train_network(net, train_dataset, test_dataset, criterion, optimizer):
+def train_network(net, dataset_object, criterion, optimizer):
     """
     Trains the network on the training data and evaluates on the
     validation data.
@@ -259,7 +297,9 @@ def train_network(net, train_dataset, test_dataset, criterion, optimizer):
         None
     """
 
-    no_of_batches = 2
+    no_of_batches = 8
+    start_file_no = 0
+    end_file_no = 16
     batch_size = 2
 
     for epoch in range(16): 
@@ -269,17 +309,24 @@ def train_network(net, train_dataset, test_dataset, criterion, optimizer):
         print('epoch:', epoch + 1)
 
         for i in tqdm(range(no_of_batches), desc="Training Progress"):
-            print(f"batch: {i}")
+            inputs, labels = dataset_object.get_data_batch(batch_size, start_file_no, end_file_no)
 
-            inputs, labels = train_dataset.get_data_batch(batch_size)
+            labels = torch.amax(labels, dim=(2, 3, 4))
             
-            print(f"Inputs shape: {inputs.shape}")
-            print(f"Labels shape: {labels.shape}")
+            # Flatten the labels to 1D tensor
+            labels = labels.view(-1)
+            
+            # Ensure labels are class indices (0 or 1)
+            labels = labels.long()
+
+            print(f"inputs shape: {inputs.shape}")
+            print(f"labels shape: {labels.shape}")
             optimizer.zero_grad()
 
             # Forward pass
             outputs = net(inputs)
 
+            print(f"outputs shape: {outputs.shape}")
             # Compute the loss
             loss = criterion(outputs, labels)
             # Backward pass and optimization
@@ -297,7 +344,7 @@ def train_network(net, train_dataset, test_dataset, criterion, optimizer):
 
         print("Evaluating the network")
         # Evaluate the network on the validation data
-        test_network(net, test_dataset)
+        test_network(net, dataset_object)
         # Save the model weights
         torch.save(net.state_dict(), "model_weights.pth")
 
@@ -308,14 +355,27 @@ def test_network(net, dataset_object):
     # Initialize confusion matrix counters
     true_positives, true_negatives, false_positives, false_negatives = 0, 0, 0, 0
 
-    no_of_batches = 2
+    no_of_batches = 8
+    start_file_no = 16
+    end_file_no = 32
     batch_size = 2
 
     with torch.no_grad():
         for i in range(no_of_batches):
-            images, labels = dataset_object.get_data_batch(batch_size)
+            images, labels = dataset_object.get_data_batch(batch_size, start_file_no, end_file_no)
+
+            labels = torch.amax(labels, dim=(2, 3, 4))
+            
+            # Flatten the labels to 1D tensor
+            labels = labels.view(-1)
+            
+            # Convert to long type 
+            labels = labels.long()
+
             outputs = net(images)
-            _, predicted = torch.max(outputs, 1)
+
+            __, predicted = torch.max(outputs.data, 1)
+
             matches = (predicted == labels)
             correct = matches.sum().item()
             total = len(labels)
@@ -359,15 +419,10 @@ if __name__ == "__main__":
 
     dir_path="/raid/candi/catalina/Task03_Liver"
 
-    train_start_file_no = 0 
-    train_end_file_no = 16
-    test_start_file_no = 16
-    test_end_file_no = 32
-
     # Initialize the dataset
-    train_dataset = NIfTIDataset(dir_path, train_start_file_no, train_end_file_no, transform=transform)
-    test_dataset =  NIfTIDataset(dir_path, test_start_file_no, test_end_file_no, transform=transform)
+    dataset = NIfTIDataset(dir_path, transform=transform)
 
+    print("Data set loaded")
     # Define the class labels
     classes = ("no cancer", "cancer")
 
@@ -379,4 +434,4 @@ if __name__ == "__main__":
     optimizer = optim.Adam(net.parameters(), lr=0.001)  # Use Adam optimizer
 
     # Train the network
-    train_network(net, train_dataset, test_dataset, criterion, optimizer)
+    train_network(net, dataset, criterion, optimizer)

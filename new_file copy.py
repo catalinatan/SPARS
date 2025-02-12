@@ -297,10 +297,10 @@ def train_network(net, dataset_object, criterion, optimizer):
         None
     """
 
-    no_of_batches = 4
+    no_of_batches = 8
     start_file_no = 0
     end_file_no = 16
-    batch_size = 4
+    batch_size = 2
 
     for epoch in range(32): 
         net.train()
@@ -355,10 +355,10 @@ def test_network(net, dataset_object):
     # Initialize confusion matrix counters
     true_positives, true_negatives, false_positives, false_negatives = 0, 0, 0, 0
 
-    no_of_batches = 4
+    no_of_batches = 8
     start_file_no = 16
     end_file_no = 32
-    batch_size = 4
+    batch_size = 2
 
     with torch.no_grad():
         for i in range(no_of_batches):

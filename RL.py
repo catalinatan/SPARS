@@ -1,7 +1,7 @@
 from typing import Optional
 import numpy as np
 import gymnasium as gym
-
+from new_file copy.py import Net
 
 class CursorImageEnv(gym.Env):
     def __init__(self, full_image_size=(256, 256, 180), window_size = (64, 64, 32)):
@@ -21,7 +21,7 @@ class CursorImageEnv(gym.Env):
         self.action_space = gym.spaces.Discrete(6)
 
         # load the classifier model
-
+        self.classifier = Net()
     def _get_obs(self):
         """Crop the image around the cursor."""
         # Assumes that cursor is in the center of the crop window

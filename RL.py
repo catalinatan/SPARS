@@ -1,4 +1,5 @@
 import numpy as np
+import os
 import gym
 import torch
 from new_file_copy import Net
@@ -7,21 +8,23 @@ from stable_baselines3 import PPO
 from stable_baselines3.common.env_util import DummyVecEnv
 import nibabel as nib
 import matplotlib.pyplot as plt
+import plotly.graph_objects as go
+os.environ['CUDA_VISIBLE_DEVICES']='-1'
 
 class CursorImageEnv(gym.Env):
-    def __init__(self, full_image_size=(512, 512, 410), window_size=(64, 64, 32)):
+    def __init__(self, full_image_size=(256, 256, 180), window_size=(64, 64, 32)):
         # Define image and window size
-        self.full_image_size = full_image_size
         self.window_size = window_size
-        self.image = nib.load('/raid/candi/catalina/Task03_Liver/imagesTr/liver_125.nii.gz').get_fdata()
-        label = nib.load('/raid/candi/catalina/Task03_Liver/labelsTr/liver_125.nii.gz').get_fdata()
+        self.image = nib.load('/Users/catalina.angelia/GamifyAI/Task03_Liver/imagesTr/liver_125.nii.gz').get_fdata()
+        self.full_image_size = full_image_size
+        label = nib.load('/Users/catalina.angelia/GamifyAI/Task03_Liver/labelsTr/liver_125.nii.gz').get_fdata()
         label[label == 1] = 0
         label[label == 2] = 1
         self.label = label
         
         # Observations are 256 x 256 x 180 images (e.g., medical imaging or volumetric data)
         self.observation_space = gym.spaces.Box(
-            low=0, high=255, shape=full_image_size, dtype=np.uint8
+            low=0, high=255, shape=self.full_image_size, dtype=np.uint8
         )
 
         # Action space is discrete, with 6 possible actions: up, down, left, right, forward, backward
@@ -35,7 +38,10 @@ class CursorImageEnv(gym.Env):
         self.prediction = None
         self.competitor = None
     
-        self.accumulated_predictions = np.zeros(full_image_size, dtype=np.float32)
+        self.accumulated_predictions = np.zeros(self.full_image_size, dtype=np.float32)
+
+    # def resize_full_image_and_label(self, img_data, label_data):
+        
     def resize_image(self, img_data):
         # Define target shape for the resized image
         target_shape = (256, 256, 180)
@@ -74,9 +80,11 @@ class CursorImageEnv(gym.Env):
     def dice_score(self, pred, target):
         pred = np.array(pred).astype(bool)
         target = target.astype(bool)
+        resized_target = self.resize_image(target)
+        print("shape of resized target", resized_target.shape)
 
-        intersection = np.logical_and(pred, target).sum()
-        dice = 2. * intersection / (pred.sum() + target.sum())
+        intersection = np.logical_and(pred, resized_target).sum()
+        dice = 2. * intersection / (pred.sum() + resized_target.sum())
         return dice
 
     def _get_reward(self, obs):
@@ -137,37 +145,39 @@ class CursorImageEnv(gym.Env):
         self.accumulated_predictions[self.cursor_position_agent1[0]:self.cursor_position_agent1[0]+self.window_size[0],
                                      self.cursor_position_agent1[1]:self.cursor_position_agent1[1]+self.window_size[1],
                                      self.cursor_position_agent1[2]:self.cursor_position_agent1[2]+self.window_size[2]] += self.prediction[0, 1].cpu().numpy()
-
+        
         return np.array(obs_agent1), new_reward_agent1, done, {}
 
     def compute_final_dice_score(self):
+        print("shape of accumulated predictions in compute_final_dice_score", self.accumulated_predictions.shape)
         thresholded_predictions = self.accumulated_predictions > 0.5
         return self.dice_score(thresholded_predictions, self.label)
 
     def set_competitor(self, new_competitor):
         self.competitor = new_competitor
 
-class dummy_func():
-    def __init__(self, env):
-        self.env = env
+test_env = CursorImageEnv()
 
-    def predict(self, inputs):
-        return [np.zeros(self.env.action_space.shape), 6]
-        
+class dummy_func():
+    def __init__():
+        pass
+
+    def predict(inputs):
+        return [np.zeros(test_env.action_space.shape), 0]
+
 def env_creator():
     env = CursorImageEnv()
-    env.set_competitor(dummy_func(env))
+    env.competitor = dummy_func
     return env
 
 vec_env = DummyVecEnv([env_creator])
-
 model = PPO("MlpPolicy", vec_env, n_steps=32, batch_size=8, n_epochs=1, verbose=2)
-
 competitor_update_frequency = 32 # every 2 steps
-num_of_interations = 32
+num_of_interations = 10,000
 
 rewards = []
 dice_scores = []
+accumulated_predictions_list = []
 
 for iteration in range(num_of_interations):
     print("Iteration:", iteration)
@@ -181,6 +191,12 @@ for iteration in range(num_of_interations):
     # Compute final dice score at the end of the episode
     final_dice_score = vec_env.env_method("compute_final_dice_score")
     dice_scores.append(final_dice_score)
+
+    # Collect predictions
+    predictions = vec_env.get_attr("accumulated_predictions")[0]
+    print("shape of predictions", predictions.shape)
+    accumulated_predictions_list.append(predictions)
+
 # Plot the rewards
 plt.plot(rewards)
 plt.xlabel('Iteration')
@@ -194,3 +210,31 @@ plt.xlabel('Iteration')
 plt.ylabel('Dice Score')
 plt.title('Dice Score over Iterations')
 plt.show()
+
+# Plot the final accumulated predictions
+final_predictions = accumulated_predictions_list[-1]
+print("length of final predictions")
+final_predictions_array = np.array(final_predictions)
+print("shape of final predictions array", final_predictions_array.shape)
+
+# Check the number of voxels with value 1
+num_voxels = np.sum(final_predictions_array == 1)
+print("Number of voxels with value 1:", num_voxels)
+
+x, y, z = np.where(final_predictions_array == 1)
+
+fig = go.Figure(data=[go.Scatter3d(
+    x=x,
+    y=y,
+    z=z,
+    mode='markers',
+    marker=dict(
+        size=2,
+        color=final_predictions_array[x, y, z],  # Color by prediction value
+        colorscale='Hot',
+        opacity=0.8
+    )
+)])
+
+fig.update_layout(title='3D Visualization of Final Predictions')
+fig.show()

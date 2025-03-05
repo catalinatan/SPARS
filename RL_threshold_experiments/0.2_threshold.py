@@ -2,7 +2,7 @@ import numpy as np
 import os
 import gym
 import torch
-from new_file_copy import Net
+from ex5_24in import Net
 import torch.nn.functional as F
 from stable_baselines3 import PPO
 from stable_baselines3.common.env_util import DummyVecEnv
@@ -11,17 +11,18 @@ import matplotlib.pyplot as plt
 import plotly.graph_objects as go
 os.environ['CUDA_VISIBLE_DEVICES']='-1'
 
+
 class CursorImageEnv(gym.Env):
     def __init__(self, full_image_size=(256, 256, 180), window_size=(64, 64, 32)):
         # Define image and window size
         self.window_size = window_size
-        self.image = nib.load('/raid/candi/catalina/Task03_Liver/imagesTr/liver_125.nii.gz').get_fdata()
+        self.image = nib.load('/Users/catalina.angelia/GamifyAI/Task03_Liver/imagesTr/liver_5.nii.gz').get_fdata()
         self.full_image_size = full_image_size
-        label = nib.load('/raid/candi/catalina/Task03_Liver/labelsTr/liver_125.nii.gz').get_fdata()
+        label = nib.load('/Users/catalina.angelia/GamifyAI/Task03_Liver/labelsTr/liver_5.nii.gz').get_fdata()
         label[label == 1] = 0
         label[label == 2] = 1
         self.label = label
-        
+
         # Observations are 256 x 256 x 180 images (e.g., medical imaging or volumetric data)
         self.observation_space = gym.spaces.Box(
             low=0, high=255, shape=self.full_image_size, dtype=np.uint8
@@ -32,15 +33,13 @@ class CursorImageEnv(gym.Env):
 
         # Load the classifier model
         self.classifier = Net()
-        self.classifier.load_state_dict(torch.load("model_weights.pth"))
+        self.classifier.load_state_dict(torch.load("ex4_24in_weights.pth"))
         self.classifier.eval()  # Set the model to evaluation mode
 
         self.prediction = None
         self.competitor = None
     
         self.accumulated_predictions = np.zeros(self.full_image_size, dtype=np.float32)
-
-    # def resize_full_image_and_label(self, img_data, label_data):
         
     def resize_image(self, img_data):
         # Define target shape for the resized image
@@ -81,7 +80,6 @@ class CursorImageEnv(gym.Env):
         pred = np.array(pred).astype(bool)
         target = target.astype(bool)
         resized_target = self.resize_image(target)
-        print("shape of resized target", resized_target.shape)
 
         intersection = np.logical_and(pred, resized_target).sum()
         dice = 2. * intersection / (pred.sum() + resized_target.sum())
@@ -92,7 +90,6 @@ class CursorImageEnv(gym.Env):
         with torch.no_grad():
             outputs = self.classifier(obs_tensor)
             self.prediction = torch.softmax(outputs, dim=1)
-            print("shape of prediction", self.prediction.shape)
             reward = self.prediction[0, 1].item()
         return reward
     
@@ -131,7 +128,7 @@ class CursorImageEnv(gym.Env):
         reward_agent1 = self._get_reward(obs_agent1)
         reward_agent2 = self._get_reward(new_obs_agent2)
 
-        done = reward_agent1 > 0.9 or reward_agent2 > 0.9
+        done = reward_agent1 > 0.2 or reward_agent2 > 0.2
         
         if reward_agent1 >= reward_agent2:
             new_reward_agent1 = 1
@@ -149,7 +146,6 @@ class CursorImageEnv(gym.Env):
         return np.array(obs_agent1), new_reward_agent1, done, {}
 
     def compute_final_dice_score(self):
-        print("shape of accumulated predictions in compute_final_dice_score", self.accumulated_predictions.shape)
         thresholded_predictions = self.accumulated_predictions > 0.5
         return self.dice_score(thresholded_predictions, self.label)
 
@@ -173,7 +169,7 @@ def env_creator():
 vec_env = DummyVecEnv([env_creator])
 model = PPO("MlpPolicy", vec_env, n_steps=32, batch_size=8, n_epochs=1, verbose=2)
 competitor_update_frequency = 32 # every 2 steps
-num_of_interations = 10000
+num_of_interations = 2
 
 rewards = []
 dice_scores = []
@@ -183,7 +179,7 @@ for iteration in range(num_of_interations):
     print("Iteration:", iteration)
     model.learn(competitor_update_frequency, progress_bar=False)
     vec_env.env_method("set_competitor", model)
-    
+
     # Collect rewards
     reward = vec_env.get_attr("reward_to_output")
     rewards.append(reward)
@@ -194,8 +190,11 @@ for iteration in range(num_of_interations):
 
     # Collect predictions
     predictions = vec_env.get_attr("accumulated_predictions")[0]
-    print("shape of predictions", predictions.shape)
     accumulated_predictions_list.append(predictions)
+    if iteration % 20 == 0: 
+        print("Dice score", final_dice_score)
+        print("Reward", reward)
+
 
 # Plot the rewards
 plt.plot(rewards)
@@ -213,13 +212,7 @@ plt.show()
 
 # Plot the final accumulated predictions
 final_predictions = accumulated_predictions_list[-1]
-print("length of final predictions")
 final_predictions_array = np.array(final_predictions)
-print("shape of final predictions array", final_predictions_array.shape)
-
-# Check the number of voxels with value 1
-num_voxels = np.sum(final_predictions_array == 1)
-print("Number of voxels with value 1:", num_voxels)
 
 x, y, z = np.where(final_predictions_array == 1)
 
@@ -238,3 +231,19 @@ fig = go.Figure(data=[go.Scatter3d(
 
 fig.update_layout(title='3D Visualization of Final Predictions')
 fig.show()
+
+# Check the number of voxels with value 1
+num_voxels = np.sum(final_predictions_array == 1)
+print("Number of voxels with cancer:", num_voxels)
+
+# Reward summary
+reward_average = np.mean(rewards)
+reward_std = np.std(rewards)
+print("Average of rewards", reward_average)
+print("Standard deviation of rewards", reward_std)
+
+# Dice score summary
+dice_score_avg = np.mean(dice_scores)
+dice_score_std = np.std(dice_scores)
+print("Average of dice score", dice_score_avg)
+print("Standard deviation of dice score", dice_score_std)

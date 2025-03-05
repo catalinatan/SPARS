@@ -1,0 +1,26 @@
+[project]
+name = "GamifyAI"
+version = "2025.3.5"
+readme = "README.md"
+
+[tool.poetry]
+name = "GamifyAI"
+version = "0.1.0"
+description = "A project for gamifying AI experiments"
+authors = ["Catalina Angelia <catalina.angelia@example.com>"]
+
+[tool.poetry.dependencies]
+python = "^3.8"
+torch = "^1.9.0"
+numpy = "^1.21.0"
+scipy = "^1.7.0"
+scikit-image = "^0.18.0"
+nibabel = "^3.2.0"
+tqdm = "^4.61.0"
+
+[build-system]
+requires = ["setuptools", "wheel", "setuptools_scm"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["classifier_experiments", "RL_threshold_experiments", "RL_window_size_experiments"]

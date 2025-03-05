@@ -128,7 +128,7 @@ class CursorImageEnv(gym.Env):
         reward_agent1 = self._get_reward(obs_agent1)
         reward_agent2 = self._get_reward(new_obs_agent2)
 
-        done = reward_agent1 > 0.2 or reward_agent2 > 0.2
+        done = reward_agent1 > 0.4 or reward_agent2 > 0.4
         
         if reward_agent1 >= reward_agent2:
             new_reward_agent1 = 1

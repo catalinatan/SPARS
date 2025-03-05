@@ -2,7 +2,7 @@ import numpy as np
 import os
 import gym
 import torch
-from net_copy import Net
+from net_copy_copy import Net
 import torch.nn.functional as F
 from stable_baselines3 import PPO
 from stable_baselines3.common.env_util import DummyVecEnv
@@ -13,7 +13,7 @@ os.environ['CUDA_VISIBLE_DEVICES']='-1'
 
 
 class CursorImageEnv(gym.Env):
-    def __init__(self, full_image_size=(256, 256, 180), window_size=(64, 64, 32)):
+    def __init__(self, full_image_size=(256, 256, 180), window_size=(16, 16, 8)):
         # Define image and window size
         self.window_size = window_size
         self.image = nib.load('/raid/candi/catalina/Task03_Liver/imagesTr/liver_5.nii.gz').get_fdata()

@@ -2,7 +2,7 @@ import numpy as np
 import os
 import gym
 import torch
-from net_copy import Net
+from net_copy_copy import Net
 import torch.nn.functional as F
 from stable_baselines3 import PPO
 from stable_baselines3.common.env_util import DummyVecEnv

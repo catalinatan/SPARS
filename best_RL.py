@@ -169,7 +169,7 @@ def env_creator():
 vec_env = DummyVecEnv([env_creator])
 model = PPO("MlpPolicy", vec_env, n_steps=32, batch_size=8, n_epochs=1, verbose=2)
 competitor_update_frequency = 32 # every 2 steps
-num_of_interations = 2
+num_of_interations = 10000
 
 rewards = []
 dice_scores = []

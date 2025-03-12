@@ -2,7 +2,7 @@ import numpy as np
 import os
 import gym
 import torch
-from net_copy import Net
+from new_file_copy import Net
 import torch.nn.functional as F
 from stable_baselines3 import PPO
 from stable_baselines3.common.env_util import DummyVecEnv
@@ -13,7 +13,7 @@ os.environ['CUDA_VISIBLE_DEVICES']='-1'
 
 
 class CursorImageEnv(gym.Env):
-    def __init__(self, full_image_size=(256, 256, 180), window_size=(64, 64, 32)):
+    def __init__(self, full_image_size=(256, 256, 180), window_size=(48, 48, 24)):
         # Define image and window size
         self.window_size = window_size
         self.image = nib.load('/raid/candi/catalina/Task03_Liver/imagesTr/liver_5.nii.gz').get_fdata()
@@ -128,7 +128,7 @@ class CursorImageEnv(gym.Env):
         reward_agent1 = self._get_reward(obs_agent1)
         reward_agent2 = self._get_reward(new_obs_agent2)
 
-        done = reward_agent1 > 0.4 or reward_agent2 > 0.4
+        done = reward_agent1 > 0.3 or reward_agent2 > 0.3
         
         if reward_agent1 >= reward_agent2:
             new_reward_agent1 = 1
@@ -169,7 +169,7 @@ def env_creator():
 vec_env = DummyVecEnv([env_creator])
 model = PPO("MlpPolicy", vec_env, n_steps=32, batch_size=8, n_epochs=1, verbose=2)
 competitor_update_frequency = 32 # every 2 steps
-num_of_interations = 10000
+num_of_interations = 2
 
 rewards = []
 dice_scores = []
@@ -231,6 +231,58 @@ fig = go.Figure(data=[go.Scatter3d(
 
 fig.update_layout(title='3D Visualization of Final Predictions')
 fig.show()
+
+fig.write_html("final_predictions_3d.html")
+fig.write_image("final_predictions_3d.png")
+
+# Load ground truth labels
+label = nib.load('/raid/candi/catalina/GamifyAI/Task03_Liver/labelsTr/liver_5.nii.gz').get_fdata()
+label[label == 1] = 0
+label[label == 2] = 1
+
+# Ensure both arrays are in the same size
+if label.shape != final_predictions_array.shape:
+    # Resize the label to match the prediction size
+    label = test_env.resize_image(label)
+    
+# Get indices for plotting
+x_pred, y_pred, z_pred = np.where(final_predictions_array > 0.5)  # Threshold predictions
+x_gt, y_gt, z_gt = np.where(label == 1)
+
+# Create the figure
+fig = go.Figure(data=[
+    go.Scatter3d(
+        x=x_pred,
+        y=y_pred,
+        z=z_pred,
+        mode='markers',
+        marker=dict(
+            size=2,
+            color='blue',  # Color for predicted labels
+            opacity=0.8
+        ),
+        name='Predicted Labels'
+    ),
+    go.Scatter3d(
+        x=x_gt,
+        y=y_gt,
+        z=z_gt,
+        mode='markers',
+        marker=dict(
+            size=2,
+            color='red',  # Color for ground truth labels
+            opacity=0.8
+        ),
+        name='Ground Truth Labels'
+    )
+])
+
+fig.update_layout(title='3D Visualization of Predicted and Ground Truth Labels')
+fig.show()
+
+# Save the figure
+fig.write_html("predicted_and_ground_truth_labels_3d.html")
+fig.write_image("predicted_and_ground_truth_labels_3d.png")
 
 # Check the number of voxels with value 1
 num_voxels = np.sum(final_predictions_array == 1)

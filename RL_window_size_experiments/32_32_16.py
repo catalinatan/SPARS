@@ -2,7 +2,7 @@ import numpy as np
 import os
 import gym
 import torch
-from net_copy_copy import Net
+from net_global import Net
 import torch.nn.functional as F
 from stable_baselines3 import PPO
 from stable_baselines3.common.env_util import DummyVecEnv
@@ -18,7 +18,7 @@ class CursorImageEnv(gym.Env):
         self.window_size = window_size
         self.image = nib.load('/raid/candi/catalina/Task03_Liver/imagesTr/liver_5.nii.gz').get_fdata()
         self.full_image_size = full_image_size
-        label = nib.load('/raid/candi/catalina/Task03_Liver/imagesTr/liver_5.nii.gz').get_fdata()
+        label = nib.load('/raid/candi/catalina/Task03_Liver/labelsTr/liver_5.nii.gz').get_fdata()
         label[label == 1] = 0
         label[label == 2] = 1
         self.label = label
@@ -128,7 +128,7 @@ class CursorImageEnv(gym.Env):
         reward_agent1 = self._get_reward(obs_agent1)
         reward_agent2 = self._get_reward(new_obs_agent2)
 
-        done = reward_agent1 > 0.2 or reward_agent2 > 0.2
+        done = reward_agent1 > 0.3 or reward_agent2 > 0.3
         
         if reward_agent1 >= reward_agent2:
             new_reward_agent1 = 1

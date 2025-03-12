@@ -18,7 +18,7 @@ class CursorImageEnv(gym.Env):
         self.window_size = window_size
         self.image = nib.load('/raid/candi/catalina/Task03_Liver/imagesTr/liver_5.nii.gz').get_fdata()
         self.full_image_size = full_image_size
-        label = nib.load('/raid/candi/catalina/Task03_Liver/imagesTr/liver_5.nii.gz').get_fdata()
+        label = nib.load('/raid/candi/catalina/Task03_Liver/labelsTr/liver_5.nii.gz').get_fdata()
         label[label == 1] = 0
         label[label == 2] = 1
         self.label = label

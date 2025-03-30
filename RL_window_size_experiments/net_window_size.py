@@ -154,9 +154,6 @@ class Net(nn.Module):
         self.fc3 = nn.Linear(800, 400)
         self.fc4 = nn.Linear(400, 128)
         self.fc5 = nn.Linear(128, 2)
-        # if accuracy is not enough, add convolution layers
-        # and fully connected layers
-        # out_channels = max 96 but can increase to 64
 
     def forward(self, x):
         """

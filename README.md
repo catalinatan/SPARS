@@ -1,6 +1,6 @@
 SPAR-WSSS: Self-Play Adversarial Reinforcement Learning for Weakly-Supervised Semantic Segmentation
 
-### Abstract
+## Abstract
 Accurate tumour segmentation is vital for targeted diagnostic and
 therapeutic surgical procedures for cancer. Current tumour segmentation
 methods involve manual delineation which is both labour-intensive and
@@ -22,7 +22,7 @@ demonstrate the potential of using SPAR-WSSS to reduce the need for
 extensive human-annotated labels to detect cancer in real-world
 healthcare settings.
 
-### Method
+## Method
 We propose an adversarial reinforcement learning environment for
 weakly-supervised segmentation where two agents compete to identify
 ROIs in images. During training, each agent moves a window across the
@@ -43,8 +43,8 @@ localisation performance has been reached.
 
 ![Method Overview](Method.png)
 
-### Algorithmn Parameters
-# Object Presence Classifier Parameters
+## Algorithmn Parameters
+### Object Presence Classifier Parameters
 
 | **Parameters**            | **Details**           |
 |---------------------------|-----------------------|
@@ -57,7 +57,7 @@ localisation performance has been reached.
 | Criterion                  | Cross Entropy Loss    |
 | Learning rate              | 0.001                 |
 
-# SPAR-WSSS Parameters
+### SPAR-WSSS Parameters
 
 | **Parameters**               | **Details**                   |
 |------------------------------|-------------------------------|
@@ -72,7 +72,7 @@ localisation performance has been reached.
 *Input size denotes the dimensions of the data used in the model.  
 **Competitor Update Frequency refers to how often the competitor model is updated during training.
 
-### Setting Up a Virtual Environment
+## Setting Up a Virtual Environment
 
 1. **Create a virtual environment**:
     ```sh

@@ -1,4 +1,4 @@
-SPAR-WSSS: Self-Play Adversarial Reinforcement Learning for Weakly-Supervised Semantic Segmentation
+SPARS: Self-Play Adversarial Reinforcement Learning for Segmentation of Liver Tumours
 
 ## Abstract
 Accurate tumour segmentation is vital for targeted diagnostic and
@@ -7,18 +7,18 @@ methods involve manual delineation which is both labour-intensive and
 subjective. Fully-supervised machine learning models aim to address
 these issues, but require a large number of costly and often subjective
 3D-voxel level labels for training. In this work, we propose a novel
-framework called SPAR-WSSS (Self-Play Adversarial Reinforcement
-Learning for Weakly-Supervised Semantic Segmentation), which utilises
+framework called SPARS (Self-Play Adversarial Reinforcement
+Learning for Segmentation of Liver Tumours), which utilises
 an object presence classifier, trained on a small number of image-level
 binary cancer presence labels, to localise cancerous regions on CT scans.
 Such binary labels of patient-level cancer presence can be sourced more
 objectively from biopsies and histopathology reports, enabling a more
 objective cancer localisation on medical images. Evaluating with real
-patient data, we observed that SPAR-WSSS yielded a mean dice score of
+patient data, we observed that SPARS yielded a mean dice score of
 77.3 ± 9.4, which outperformed other weakly-supervised methods by
 large margins. This performance was comparable with recent fully-
 supervised methods that require voxel-level annotations. Our results
-demonstrate the potential of using SPAR-WSSS to reduce the need for
+demonstrate the potential of using SPARS to reduce the need for
 extensive human-annotated labels to detect cancer in real-world
 healthcare settings.
 
@@ -57,7 +57,7 @@ localisation performance has been reached.
 | Criterion                  | Cross Entropy Loss    |
 | Learning rate              | 0.001                 |
 
-### SPAR-WSSS Parameters
+### SPARS Parameters
 
 | **Parameters**               | **Details**                   |
 |------------------------------|-------------------------------|

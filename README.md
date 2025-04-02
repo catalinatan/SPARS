@@ -1,4 +1,4 @@
-SPARS: Self-Play Adversarial Reinforcement Learning for Segmentation of Liver Tumours
+# SPARS: Self-Play Adversarial Reinforcement Learning for Segmentation of Liver Tumours
 
 ## Abstract
 Accurate tumour segmentation is vital for targeted diagnostic and

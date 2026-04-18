@@ -1,5 +1,9 @@
 # SPARS: Self-Play Adversarial Reinforcement Learning for Segmentation of Liver Tumours
 
+![Python](https://img.shields.io/badge/python-3.8%2B-blue)
+![PyTorch](https://img.shields.io/badge/PyTorch-Deep%20Learning-orange)
+![License](https://img.shields.io/badge/license-Research-lightgrey)
+
 ## Abstract
 Accurate tumour segmentation is vital for targeted diagnostic and
 therapeutic surgical procedures for cancer. Current tumour segmentation
@@ -43,7 +47,7 @@ localisation performance has been reached.
 
 ![Method Overview](Method.png)
 
-## Algorithmn Parameters
+## Algorithm Parameters
 ### Object Presence Classifier Parameters
 
 | **Parameters**            | **Details**           |
@@ -72,6 +76,50 @@ localisation performance has been reached.
 *Input size denotes the dimensions of the data used in the model.  
 **Competitor Update Frequency refers to how often the competitor model is updated during training.
 
+## Repository Overview
+
+This repository contains the core implementation of SPARS along with experiment variants for classifier input size, reinforcement-learning thresholds, and window-size settings.
+
+### Main components
+
+- `best_RL.py`: Main RL environment and PPO training workflow for SPARS.
+- `net_global.py`: Global model architecture definitions used by training scripts.
+- `classifier_experiments/`: Classifier experiments across different input sizes.
+- `RL_threshold_experiments/`: SPARS variants using different reward/termination thresholds.
+- `RL_window_size_experiments/`: SPARS variants using different window sizes.
+- `requirements.txt`: Dependency list for reproduction.
+- `pyproject.toml`: Build and packaging metadata.
+
+## Project Structure
+
+```text
+.
+├── best_RL.py
+├── net_global.py
+├── pyproject.toml
+├── requirements.txt
+├── classifier_experiments/
+│   ├── ex1_8in.py
+│   ├── ex2_12in.py
+│   ├── ex3_16in.py
+│   ├── ex4_20in.py
+│   └── ex5_24in.py
+├── RL_threshold_experiments/
+│   ├── 0.2_threshold.py
+│   ├── 0.3_threshold.py
+│   ├── 0.4_threshold.py
+│   ├── 0.5_threshold.py
+│   ├── 0.6_threshold.py
+│   └── net_threshold.py
+└── RL_window_size_experiments/
+    ├── 8_8_8.py
+    ├── 16_16_8.py
+    ├── 32_32_16.py
+    ├── 48_48_24.py
+    ├── 64_64_32.py
+    └── net_window_size.py
+```
+
 ## Setting Up a Virtual Environment
 
 1. **Create a virtual environment**:
@@ -90,17 +138,47 @@ localisation performance has been reached.
         ```
 
 ## Installing the Project
-To install the project, use the following command:
+Install the project in editable mode:
 
 ```bash
 pip install -e .
 ```
 
-## Installing  Dependencies
-To install dependencies listed in the requirements.txt file, use the following 
-command:
+## Installing Dependencies
+Install dependencies listed in `requirements.txt`:
 
 ```bash
 pip install -r requirements.txt
 ```
+
+## Running Experiments
+
+Run the main SPARS training script:
+
+```bash
+python best_RL.py
+```
+
+Run experiment variants:
+
+```bash
+# Classifier input-size experiment
+python classifier_experiments/ex4_20in.py
+
+# RL threshold experiment
+python RL_threshold_experiments/0.4_threshold.py
+
+# RL window-size experiment
+python RL_window_size_experiments/48_48_24.py
+```
+
+## Reproducibility Notes
+
+- The current scripts expect local NIfTI data paths. Update dataset paths in scripts before running experiments.
+- Ensure classifier checkpoint files (for example, `ex4_24in_weights.pth`) are available at expected paths.
+- GPU configuration can be adjusted in scripts if required (for example, `CUDA_VISIBLE_DEVICES`).
+
+## Citation
+
+If you use SPARS in academic work, please cite the corresponding publication or preprint associated with this repository.
 
